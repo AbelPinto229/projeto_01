@@ -1,5 +1,7 @@
 # Projeto 01 - API ClickUp - ABEL PINTO - UPSKILL229
 
+https://github.com/AbelPinto229/projeto_01
+
 API REST desenvolvida com Node.js e Express para gerenciamento de tarefas.
 
 ## Estrutura do Projeto
