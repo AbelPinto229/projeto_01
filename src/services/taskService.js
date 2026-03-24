@@ -44,11 +44,7 @@ export const createTask = async (data) => {
     [data.titulo, data.categoria, data.concluida ?? false, data.responsavelNome, data.dataConclusao ?? null]
   );
 
-  // retorna a tarefa criada com o ID gerado pelo banco
-  // result.insertId só funciona se a tabela tiver uma coluna com auto-incremento
-  // ...data espalha todos os campos recebidos no objeto de retorno (spread operator)
-  // sem spread seria: { id: result.insertId, titulo: data.titulo, categoria: data.categoria, responsavelNome: data.responsavelNome, ... }
-  // usa ?? novamente para garantir valores padrão no retorno
+  // retorna a tarefa criada com o ID gerado pelo banco e os dados fornecidos (com valores padrão aplicados)
   return {
     id: result.insertId,
     ...data,
@@ -68,15 +64,11 @@ export const createTask = async (data) => {
 export const updateTask = async (id, data) => {
   const [existing] = await db.query('SELECT * FROM tasks WHERE id = ?', [id]);
   
-  // se não encontrar, lança erro
   if (existing.length === 0) {
     throw new Error("Tarefa não encontrada");
   }
 
-  // Pega o primeiro elemento do array de resultados
-  // existing[0] é o objeto da tarefa: {id: 5, titulo: "...", categoria: "...", concluida: false, ...}
   const task = existing[0];
-  // executa o UPDATE usando os valores fornecidos ou mantendo os atuais com ??
   await db.query(
     'UPDATE tasks SET titulo = ?, categoria = ?, concluida = ?, responsavelNome = ?, dataConclusao = ? WHERE id = ?',
     [
@@ -89,7 +81,7 @@ export const updateTask = async (id, data) => {
     ]
   );
 
-  // guarda em updated o resultado e retorna a tarefa atualizada
+
   const [updated] = await db.query('SELECT * FROM tasks WHERE id = ?', [id]);
   return updated[0];
 };
@@ -102,14 +94,12 @@ export const updateTask = async (id, data) => {
  * 4. se deletado com sucesso, retorna mensagem de confirmação
  */
 export const deleteTask = async (id) => {
-  // executa o DELETE
+
   const [result] = await db.query('DELETE FROM tasks WHERE id = ?', [id]);
   
-  // verifica se alguma linha foi afetada (se a tarefa existia)
   if (result.affectedRows === 0) {
     throw new Error("Tarefa não encontrada");
   }
-// retorna mensagem de sucesso
   return { message: "Tarefa deletada com sucesso" };
 };
 
@@ -121,8 +111,6 @@ export const deleteTask = async (id) => {
  * 4. retorna objeto com os três valores (total, concluidas, pendentes) 
  */
 export const getTaskStats = async () => {
-  // Query agregada para estatísticas
-  // CASE WHEN permite contar condicionalmente
   const [rows] = await db.query(`
     SELECT
       COUNT(*) AS total,
@@ -130,7 +118,7 @@ export const getTaskStats = async () => {
       SUM(CASE WHEN concluida = 0 THEN 1 ELSE 0 END) AS pendentes
     FROM tasks
   `);
-// retorna o primeiro elemento do array, que é o objeto com as estatísticas
+
   return rows[0];
 };
 
@@ -141,36 +129,33 @@ export const getTaskStats = async () => {
  * 3. retorna todas as tarefas onde o nome coincide
  */
 export const getTasksByUserId = async (userId) => {
-  // usa subquery para buscar nome do usuário e comparar com responsavelNome
   const [rows] = await db.query(
     'SELECT * FROM tasks WHERE responsavelNome = (SELECT name FROM users WHERE id = ?)',
     [userId]
   );
-  // retorna o array de tarefas atribuídas ao usuário
   return rows;
 };
 
 /**
  * cria relacionamento muitos-para-muitos entre tarefa e tag
- * Recebe o ID da tarefa e o ID da tag a ser associada
+ * Receb o ID da tarefa e o ID da tag a ser associada
  * 1. verifica se a associação já existe na tabela task_tags
  * 2. se já existir, lança erro para evitar duplicação
  * 3. se não existir, insere novo registro na tabela de relacionamento
  * 4. retorna mensagem de sucesso
  */
 export const addTagToTask = async (taskId, tagData) => {
-  // verifica se a associação já existe para evitar duplicação
+
   const [alreadyExists] = await db.query(
     'SELECT * FROM task_tags WHERE task_id = ? AND tag_id = ?',
     [taskId, tagData.tag_id]
   );
   
-  // se já existe, lança erro
+  
   if (alreadyExists.length > 0) {
     throw new Error("Tag já associada a esta task");
   }
 
-  // insere o relacionamento na tabela task_tags
   await db.query(
     'INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?)',
     [taskId, tagData.tag_id]

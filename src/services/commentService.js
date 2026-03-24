@@ -28,15 +28,12 @@ export const createComment = async (taskId, data) => {
  * 3. retorna array com todos os comentários encontrados
  */
 export const getCommentsByTaskId = async (taskId) => {
-  // SELECT * busca todos os comentários onde task_id = ? (taskId)
-  // ORDER BY dataCriacao ASC ordena do mais antigo para o mais recente
-  // Destructuring: const [rows] extrai o primeiro elemento do array retornado por db.query()
+  
   const [rows] = await db.query(
     'SELECT * FROM comments WHERE task_id = ? ORDER BY dataCriacao ASC',
-    [taskId]  // array de entrada (params) para o prepared statement
+    [taskId] 
   );
   
-  // rows é o array de saída com todos os comentários encontrados
   return rows;
 };
 
@@ -53,16 +50,13 @@ export const updateComment = async (taskId, commentId, data) => {
     'UPDATE comments SET conteudo = ? WHERE id = ? AND task_id = ?',
     [data.conteudo, commentId, taskId]  // array de entrada (params)
   );
-
-  // affectedRows indica quantas linhas foram modificadas
-  // Se for 0, significa que o comentário não existe ou não pertence a essa tarefa
+  
   if (result.affectedRows === 0) {
     throw new Error("Comentário não encontrado");
   }
 
-  // Busca o comentário atualizado para retornar com todos os campos
   const [updated] = await db.query('SELECT * FROM comments WHERE id = ?', [commentId]);
-  // updated[0] pega o primeiro elemento do array de saída (o comentário)
+
   return updated[0];
 };
 
@@ -74,15 +68,10 @@ export const updateComment = async (taskId, commentId, data) => {
  * 4. retorna mensagem de sucesso
  */
 export const deleteComment = async (taskId, commentId) => {
-  // DELETE remove o comentário do banco de dados
-  // WHERE id = ? AND task_id = ? garante que estamos deletando o comentário correto da tarefa correta
   const [result] = await db.query(
     'DELETE FROM comments WHERE id = ? AND task_id = ?',
-    [commentId, taskId]  // array de entrada (params) para o prepared statement
-  );
-  
-  // affectedRows indica quantas linhas foram deletadas
-  // Se for 0, o comentário não existe ou não pertence a essa tarefa
+    [commentId, taskId] )
+
   if (result.affectedRows === 0) {
     throw new Error("Comentário não encontrado");
   }
