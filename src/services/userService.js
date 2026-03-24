@@ -35,10 +35,7 @@ export const createUser = (data) => {
 }
 
 export const updateUser = (id, data) => {
-  const user = users.find(u => u.id === id);
-  if (!user) {
-    throw new Error("Usuário não encontrado");
-  }
+  const user = getUserById(id);
   user.name = data.name ?? user.name;
   user.email = data.email ?? user.email;
   user.active = data.active ?? user.active;
@@ -46,20 +43,15 @@ export const updateUser = (id, data) => {
 }
 
 export const toggleUserStatus = (id) => {
-  const user = users.find(u => u.id === id);
-  if (!user) {
-    throw new Error("Usuário não encontrado");
-  }
+  const user = getUserById(id);
   user.active = !user.active;
   return user;
 }
 
 export const deleteUser = (id) => {
-  const user = users.find(u => u.id === id);
-  if (!user) {
-    throw new Error("Usuário não encontrado");
-  }
+  getUserById(id); // Verifica se o usuário existe
   users = users.filter(u => u.id !== id);
+  return { message: "Usuário deletado com sucesso" };
 }
 
 export const getUserStats = () => {
