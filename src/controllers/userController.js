@@ -1,53 +1,59 @@
 import * as userService from "../services/userService.js";
 
-export const getUsers = (req, res) => {
+// GET /users, GET /users?sort=asc|desc, GET /users?search=nome
+export const getUsers = async (req, res) => {
   try {
-    const users = userService.getUsers(req.query);
+    const users = await userService.getUsers(req.query);
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }
 
-export const createUser = (req, res) => {
+// POST /users
+export const createUser = async (req, res) => {
   try {
-    const user = userService.createUser(req.body);
+    const user = await userService.createUser(req.body);
     res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }
 
-export const updateUser = (req, res) => {
+// PUT /users/:id
+export const updateUser = async (req, res) => {
   try {
-    const user = userService.updateUser(req.user.id, req.body);
+    const user = await userService.updateUser(req.user.id, req.body);
     res.json(user);
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 }
 
-export const toggleUserStatus = (req, res) => {
+// PATCH /users/:id
+export const toggleUserStatus = async (req, res) => {
   try {
-    const user = userService.toggleUserStatus(req.user.id);
+    const user = await userService.toggleUserStatus(req.user.id);
     res.json(user);
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 }
 
-export const deleteUser = (req, res) => {
+// DELETE /users/:id
+export const deleteUser = async (req, res) => {
   try {
-    userService.deleteUser(req.user.id);
+    await userService.deleteUser(req.user.id);
     res.json({ message: "Usuário deletado com sucesso" });
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 }
 
-export const getUserStats = (req, res) => {
+// GET /users/stats
+export const getUserStats = async (req, res) => {
   try {
-    const stats = userService.getUserStats();
+    const stats = await userService.getUserStats();
     res.json(stats);
   } catch (error) {
     res.status(500).json({ error: error.message });

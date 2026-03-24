@@ -1,62 +1,102 @@
-let users = [];
-let id = 1;
+import db from '../db.js';
 
-export const getUsers = (query = {}) => {
-  let result = [...users];
+// GET /users
+// GET /users?sort=asc|desc
+// GET /users?search=nome
+export const getUsers = async (query = {}) => {
+  let sql = 'SELECT * FROM users';
+  const params = [];
   
-  // Filtro de busca
   if (query.search) {
-    const searchLower = query.search.toLowerCase();
-    result = result.filter(u => 
-      u.name.toLowerCase().includes(searchLower) ||
-      u.email.toLowerCase().includes(searchLower)
-    );
+    sql += ' WHERE name LIKE ?';
+    params.push(`%${query.search}%`);
   }
   
-  // Ordenação
   if (query.sort === 'asc') {
-    result.sort((a, b) => a.name.localeCompare(b.name));
+    sql += ' ORDER BY name ASC';
   } else if (query.sort === 'desc') {
-    result.sort((a, b) => b.name.localeCompare(a.name));
+    sql += ' ORDER BY name DESC';
   }
   
-  return result;
-}
+  const [rows] = await db.query(sql, params);
+  return rows;
+};
 
-export const createUser = (data) => {
-  const newUser = { 
-    id: id++, 
-    name: data.name,
-    email: data.email,
+// POST /users
+export const createUser = async (data) => {
+  const [result] = await db.query(
+    'INSERT INTO users (name, email, active) VALUES (?, ?, ?)',
+    [data.name, data.email, data.active ?? true]
+  );
+  
+  return {
+    id: result.insertId,
+    ...data,
     active: data.active ?? true
   };
-  users.push(newUser);
-  return newUser;
-}
+};
 
-export const updateUser = (id, data) => {
-  const user = getUserById(id);
-  user.name = data.name ?? user.name;
-  user.email = data.email ?? user.email;
-  user.active = data.active ?? user.active;
-  return user;
-}
+// PUT /users/:id
+export const updateUser = async (id, data) => {
+  const [existing] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  
+  if (existing.length === 0) {
+    throw new Error("Usuário não encontrado");
+  }
 
-export const toggleUserStatus = (id) => {
-  const user = getUserById(id);
-  user.active = !user.active;
-  return user;
-}
+  const user = existing[0];
 
-export const deleteUser = (id) => {
-  getUserById(id); // Verifica se o usuário existe
-  users = users.filter(u => u.id !== id);
+  await db.query(
+    'UPDATE users SET name = ?, email = ?, active = ? WHERE id = ?',
+    [
+      data.name ?? user.name,
+      data.email ?? user.email,
+      data.active ?? user.active,
+      id
+    ]
+  );
+
+  const [updated] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  return updated[0];
+};
+
+// PATCH /users/:id
+export const toggleUserStatus = async (id) => {
+  const [existing] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  
+  if (existing.length === 0) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  const newStatus = !existing[0].active;
+  
+  await db.query('UPDATE users SET active = ? WHERE id = ?', [newStatus, id]);
+  
+  const [updated] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  return updated[0];
+};
+
+// DELETE /users/:id
+export const deleteUser = async (id) => {
+  const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+  
+  if (result.affectedRows === 0) {
+    throw new Error("Usuário não encontrado");
+  }
+  
   return { message: "Usuário deletado com sucesso" };
-}
+};
 
-export const getUserStats = () => {
-  const total = users.length;
-  const ativos = users.filter(u => u.active).length;
+// GET /users/stats
+export const getUserStats = async () => {
+  const [rows] = await db.query(`
+    SELECT 
+      COUNT(*) as total,
+      SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) as ativos
+    FROM users
+  `);
+  
+  const { total, ativos } = rows[0];
   const percentagemAtivos = total > 0 ? ((ativos / total) * 100).toFixed(2) : 0;
   
   return {
@@ -64,12 +104,4 @@ export const getUserStats = () => {
     ativos,
     percentagemAtivos: `${percentagemAtivos}%`
   };
-}
-
-export const getUserById = (id) => {
-  const user = users.find(u => u.id === id);
-  if (!user) {
-    throw new Error("Usuário não encontrado");
-  }
-  return user;
-}
+};

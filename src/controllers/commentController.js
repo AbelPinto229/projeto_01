@@ -1,24 +1,48 @@
 import * as commentService from "../services/commentService.js";
 
-export const getCommentsByTask = (req, res) => {
+// GET /tasks/:id/comments
+export const getCommentsByTask = async (req, res) => {
   try {
-    const comments = commentService.getCommentsByTask(Number(req.params.id));
+    const comments = await commentService.getCommentsByTaskId(Number(req.params.id));
     res.json(comments);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(404).json({ error: error.message });
   }
 }
 
-export const createComment = (req, res) => {
+// POST /tasks/:id/comments
+export const createComment = async (req, res) => {
   try {
-    const commentData = {
-      taskId: Number(req.params.id),
-      userId: req.body.userId,
-      conteudo: req.body.conteudo
-    };
-    const comment = commentService.createComment(commentData);
+    const comment = await commentService.createComment(Number(req.params.id), req.body);
     res.status(201).json(comment);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+}
+
+// PUT /tasks/:id/comments/:commentId
+export const updateComment = async (req, res) => {
+  try {
+    const comment = await commentService.updateComment(
+      Number(req.params.id),
+      Number(req.params.commentId),
+      req.body
+    );
+    res.json(comment);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+}
+
+// DELETE /tasks/:id/comments/:commentId
+export const deleteComment = async (req, res) => {
+  try {
+    const result = await commentService.deleteComment(
+      Number(req.params.id),
+      Number(req.params.commentId)
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
   }
 }

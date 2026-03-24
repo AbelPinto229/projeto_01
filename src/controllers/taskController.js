@@ -1,55 +1,70 @@
 import * as taskService from "../services/taskService.js";
 
-
-export const getTasks = (req, res) => {
+// GET /tasks, GET /tasks?sort=asc|desc, GET /tasks?search=titulo
+export const getTasks = async (req, res) => {
   try {
-    const tasks = taskService.getTasks(req.query);
+    const tasks = await taskService.getTasks(req.query);
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }
 
-export const createTask = (req, res) => {
+// POST /tasks
+export const createTask = async (req, res) => {
   try {
-    const task =  taskService.createTask(req.body);
+    const task = await taskService.createTask(req.body);
     res.status(201).json(task);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }
 
-export const updateTask = (req, res) => {
+// PUT /tasks/:id
+export const updateTask = async (req, res) => {
   try {
-    const task = taskService.updateTask(Number(req.params.id), req.body);
+    const task = await taskService.updateTask(Number(req.params.id), req.body);
     res.json(task);
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 }
 
-export const deleteTask = (req, res) => {
+// DELETE /tasks/:id
+export const deleteTask = async (req, res) => {
   try {
-    taskService.deleteTask(Number(req.params.id));
+    await taskService.deleteTask(Number(req.params.id));
     res.json({ message: "Tarefa deletada com sucesso" });
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 }
 
-export const getTaskStats = (req, res) => {
+// GET /tasks/stats
+export const getTaskStats = async (req, res) => {
   try {
-    const stats = taskService.getTaskStats();
+    const stats = await taskService.getTaskStats();
     res.json(stats);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }
 
-export const addTagToTask = (req, res) => {
+// GET /users/:id/tasks
+export const getTasksByUserId = async (req, res) => {
   try {
-    const relation = taskService.addTagToTask(Number(req.params.id), req.body.tagId);
-    res.status(201).json(relation);
+    const tasks = await taskService.getTasksByUserId(Number(req.params.id));
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// POST /tasks/:id/tags
+export const addTagToTask = async (req, res) => {
+  try {
+    const result = await taskService.addTagToTask(Number(req.params.id), req.body);
+    res.status(201).json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

@@ -7,9 +7,11 @@ const router = express.Router();
 router.get("/", taskController.getTasks);
 router.get("/stats", taskController.getTaskStats);
 router.post("/", taskController.createTask);
-router.get("/:id/comments", commentController.getCommentsByTask);
 router.post("/:id/tags", taskController.addTagToTask);
+router.get("/:id/comments", commentController.getCommentsByTask);
 router.post("/:id/comments", commentController.createComment);
+router.put("/:id/comments/:commentId", commentController.updateComment);
+router.delete("/:id/comments/:commentId", commentController.deleteComment);
 router.put("/:id", taskController.updateTask);
 router.delete("/:id", taskController.deleteTask);
 

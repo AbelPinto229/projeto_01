@@ -1,5 +1,6 @@
 import express from "express";
 import * as userController from "../controllers/userController.js";
+import * as taskController from "../controllers/taskController.js";
 import { checkUserExists } from "../middlewares/checkUserExists.js";
 
 const router = express.Router();
@@ -7,6 +8,7 @@ const router = express.Router();
 router.get("/", userController.getUsers);
 router.get("/stats", userController.getUserStats);
 router.post("/", userController.createUser);
+router.get("/:id/tasks", taskController.getTasksByUserId);
 router.put("/:id", checkUserExists, userController.updateUser);
 router.patch("/:id", checkUserExists, userController.toggleUserStatus);
 router.delete("/:id", checkUserExists, userController.deleteUser);

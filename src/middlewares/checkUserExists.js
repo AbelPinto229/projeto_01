@@ -1,13 +1,17 @@
-import * as userService from "../services/userService.js";
+import db from "../db.js";
 
-export const checkUserExists = (req, res, next) => {
-  const userId = Number(req.params.id);
-  
-  const users = userService.getUsers();
-  const user = users.find(u => u.id === userId);
-  
-  if (!user) return res.status(404).json({ error: "Utilizador não encontrado" });
-  
-  req.user = user;
-  next();
+export const checkUserExists = async (req, res, next) => {
+  try {
+    const userId = Number(req.params.id);
+    const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Utilizador não encontrado" });
+    }
+    
+    req.user = rows[0];
+    next();
+  } catch (error) {
+    res.status(404).json({ error: "Utilizador não encontrado" });
+  }
 };
