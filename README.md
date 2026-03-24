@@ -2,13 +2,13 @@
 
 **Autor:** Abel Pinto
 
-**Repositório GitHub:** [https://github.com/seu-usuario/seu-repositorio](https://github.com/seu-usuario/seu-repositorio)
+**Repositório GitHub:** [https://github.com/AbelPinto229/projeto_01.git](https://github.com/AbelPinto229/projeto_01.git)
 
 ## Passos para executar o código
 
 1. **Clone o repositório:**
    ```bash
-   git clone https://github.com/seu-usuario/seu-repositorio.git
+   git clone https://github.com/AbelPinto229/projeto_01.git
    cd seu-repositorio
    ```
 2. **Instale as dependências:**
