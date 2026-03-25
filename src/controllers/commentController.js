@@ -10,7 +10,7 @@ export const getCommentsByTask = async (req, res) => {
     
     res.json(comments);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -26,7 +26,7 @@ export const createComment = async (req, res) => {
     res.status(201).json(comment);
   } catch (error) {
     // Erro 400 (Bad Request) se os dados forem inválidos
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -44,7 +44,7 @@ export const updateComment = async (req, res) => {
     res.json(comment);
   } catch (error) {
 
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -63,6 +63,6 @@ export const deleteComment = async (req, res) => {
     res.json(result);
   } catch (error) {
    
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }

@@ -11,7 +11,7 @@ export const getTags = async (req, res) => {
     res.json(tags);
   } catch (error) {
   
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -26,7 +26,7 @@ export const createTag = async (req, res) => {
     
     res.status(201).json(tag);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -42,7 +42,7 @@ export const deleteTag = async (req, res) => {
     res.json({ message: "Tag deletada com sucesso" });
   } catch (error) {
   
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -57,6 +57,6 @@ export const getTasksForTag = async (req, res) => {
     res.json(tasks);
   } catch (error) {
     
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }

@@ -11,7 +11,7 @@ export const getUsers = async (req, res) => {
     res.json(users);
   } catch (error) {
    
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -26,7 +26,7 @@ export const createUser = async (req, res) => {
     res.status(201).json(user);
   } catch (error) {
    
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -41,7 +41,7 @@ export const updateUser = async (req, res) => {
     res.json(user);
   } catch (error) {
     
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -56,7 +56,7 @@ export const toggleUserStatus = async (req, res) => {
     res.json(user);
   } catch (error) {
    
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -71,7 +71,7 @@ export const deleteUser = async (req, res) => {
     res.json({ message: "Usuário deletado com sucesso" });
   } catch (error) {
    
-    res.status(404).json({ error: error.message });
+    res.status(404).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
 
@@ -87,6 +87,6 @@ export const getUserStats = async (req, res) => {
     res.json(stats);
   } catch (error) {
 
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
