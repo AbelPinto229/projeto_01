@@ -1,62 +1,50 @@
 import { db } from "../db.js";
 
-/**
- * cria um novo comentário para uma tarefa
- * 1. executa INSERT na tabela comments com os dados fornecidos (taskId e req.body do controller)
- * 2. usa prepared statement com ? para prevenir SQL injection
- * 3. retorna o objeto do comentário criado com o ID gerado pelo banco
- */
+// executa uma função assíncrona que cria um novo comentário para uma tarefa
+// recebe o id da tarefa (taskId) e os dados do comentário (normalmente user_id e conteudo) vindos do controller
+// executa um INSERT na tabela comments usando prepared statement para evitar SQL injection
+// o resultado da query retorna o insertId, que é o id gerado automaticamente pelo banco
+// retorna um objeto com o id do comentário, o id da tarefa, o id do usuário e o conteúdo
 export const createComment = async (taskId, data) => {
   const [result] = await db.query(
     'INSERT INTO comments (task_id, user_id, conteudo) VALUES (?, ?, ?)',
     [taskId, data.user_id, data.conteudo]
   );
-  
-  // Retorna o comentário recém-criado com o ID gerado automaticamente pelo MySQL
   return {
-    id: result.insertId,         
+    id: result.insertId,
     task_id: taskId,
     user_id: data.user_id,
     conteudo: data.conteudo
   };
 };
 
-/**
- * busca todos os comentários de uma tarefa específica
- * 1. executa SELECT com WHERE para filtrar comentários pela task_id
- * 2. ordena os resultados por dataCriação (do mais antigo para o mais recente)
- * 3. retorna array com todos os comentários encontrados
- */
+// executa uma função assíncrona que busca todos os comentários de uma tarefa específica
+// recebe o id da tarefa (taskId) como parâmetro
+// executa um SELECT na tabela comments filtrando pelo task_id e ordenando por data de criação (do mais antigo para o mais recente)
+// desestrutura o resultado para pegar o array de comentários (rows)
+// retorna esse array contendo todos os comentários encontrados para a tarefa
 export const getCommentsByTaskId = async (taskId) => {
-  
   const [rows] = await db.query(
     'SELECT * FROM comments WHERE task_id = ? ORDER BY dataCriacao ASC',
-    [taskId] 
+    [taskId]
   );
-  
   return rows;
 };
 
-/**
- * atualiza o conteúdo de um comentário existente
- * 1. executa UPDATE na tabela comments com validação de task_id e comment_id
- * 2. verifica affectedRows para confirmar que o comentário existe e pertence à tarefa
- * 3. busca e retorna o comentário atualizado com todos os campos
- */
+// executa uma função assíncrona que atualiza o conteúdo de um comentário existente
+// recebe o id da tarefa (taskId), o id do comentário (commentId) e os novos dados (normalmente conteudo)
+// executa um UPDATE na tabela comments, garantindo que o comentário pertence à tarefa correta (WHERE id = ? AND task_id = ?)
+// verifica se alguma linha foi afetada (affectedRows) para saber se o comentário existia e pertencia à tarefa
+// se não existia, lança erro; se atualizou, busca o comentário atualizado e retorna o objeto completo
 export const updateComment = async (taskId, commentId, data) => {
-  // UPDATE modifica o conteúdo do comentário
-  // WHERE id = ? AND task_id = ? garante que o comentário pertence à tarefa correta
   const [result] = await db.query(
     'UPDATE comments SET conteudo = ? WHERE id = ? AND task_id = ?',
-    [data.conteudo, commentId, taskId]  // array de entrada (params)
+    [data.conteudo, commentId, taskId]
   );
-  
   if (result.affectedRows === 0) {
     throw new Error("Comentário não encontrado");
   }
-
   const [updated] = await db.query('SELECT * FROM comments WHERE id = ?', [commentId]);
-
   return updated[0];
 };
 

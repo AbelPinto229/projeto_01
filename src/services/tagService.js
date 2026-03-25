@@ -1,62 +1,50 @@
 import { db } from '../db.js';
 
-/**
- * busca todas as tags disponíveis no sistema
- * 1. executa SELECT * na tabela tags sem filtros
- * 2. retorna array com todas as tags cadastradas
- */
+// executa uma função assíncrona que busca todas as tags cadastradas no sistema
+// não recebe parâmetros, apenas executa um SELECT * na tabela tags
+// o resultado da query é desestruturado para pegar o array de tags (rows)
+// retorna esse array contendo todas as tags existentes
 export const getTags = async () => {
-  
   const [rows] = await db.query('SELECT * FROM tags');
   return rows;
 };
 
-/**
- * cria uma nova tag no sistema
- * 1. executa INSERT na tabela tags com o nome fornecido (req.body do controller)
- * 2. usa prepared statement com ? para prevenir SQL injection
- * 3. retorna o objeto da tag criada com o ID gerado pelo banco
- */
+// executa uma função assíncrona que cria uma nova tag no sistema
+// recebe os dados da tag (normalmente só o nome) vindos do controller (req.body)
+// executa um INSERT na tabela tags usando prepared statement para evitar SQL injection
+// o resultado da query retorna o insertId, que é o id gerado automaticamente pelo banco
+// retorna um objeto com o id e o nome da tag criada
 export const createTag = async (data) => {
-  
   const [result] = await db.query(
     'INSERT INTO tags (name) VALUES (?)',
     [data.name]
   );
-  
   return {
-    id: result.insertId, 
+    id: result.insertId,
     name: data.name
   };
 };
 
-/**
- * deleta uma tag e todas as suas associações com tarefas
- * 1. primeiro remove todas as associações na tabela task_tags para evitar violação de foreign key
- * 2. depois deleta a própria tag da tabela tags
- * 3. verifica affectedRows para confirmar que a tag existia
- * 4. se nenhuma linha foi afetada, lança erro
- * 5. retorna mensagem de sucesso
- */
+// executa uma função assíncrona que deleta uma tag do sistema e todas as suas associações com tarefas
+// recebe o id da tag a ser deletada
+// primeiro remove todas as associações dessa tag na tabela task_tags para evitar erro de foreign key
+// depois deleta a própria tag da tabela tags
+// verifica se alguma linha foi afetada (affectedRows) para saber se a tag existia
+// se não existia, lança erro; se deletou, retorna mensagem de sucesso
 export const deleteTag = async (id) => {
-
   await db.query('DELETE FROM task_tags WHERE tag_id = ?', [id]);
-  
   const [result] = await db.query('DELETE FROM tags WHERE id = ?', [id]);
-  
   if (result.affectedRows === 0) {
     throw new Error("Tag não encontrada");
   }
-  
   return { message: "Tag deletada com sucesso" };
 };
 
-/**
- * busca todas as tarefas que possuem uma tag específica
- * 1. usa INNER JOIN entre tabelas tasks e task_tags para relacionar tarefas com suas tags
- * 2. filtra pelo tag_id na tabela de relacionamento (padrão many-to-many)
- * 3. retorna array com todas as tarefas que possuem essa tag
- */
+// executa uma função assíncrona que busca todas as tarefas associadas a uma tag específica
+// recebe o id da tag como parâmetro
+// faz um INNER JOIN entre as tabelas tasks e task_tags para encontrar as tarefas relacionadas à tag
+// filtra pelo tag_id na tabela de relacionamento (many-to-many)
+// retorna um array com todas as tarefas que possuem essa tag
 export const getTasksByTagId = async (tagId) => {
   const [rows] = await db.query(`
     SELECT tasks.* 

@@ -1,13 +1,12 @@
 
 import { db } from '../db.js';
 
-/**
- * busca todos os usuários com opções de pesquisa e ordenação
- * 1. constrói query SQL dinâmica baseada nos parâmetros recebidos (req.query do controller)
- * 2. se houver busca, adiciona WHERE com LIKE para busca parcial no nome
- * 3. se houver ordenação, adiciona ORDER BY na direção especificada (asc/desc)
- * 4. retorna array com os usuários encontrados
- */
+// executa uma função assíncrona que busca todos os usuários do sistema
+// recebe um objeto query com possíveis filtros de pesquisa e ordenação (ex: ?search=nome&sort=asc)
+// monta uma query SQL dinâmica: se houver search, adiciona WHERE com LIKE para busca parcial no nome
+// se houver sort, adiciona ORDER BY na direção especificada (asc/desc)
+// executa a query no banco e desestrutura o resultado para pegar o array de usuários (rows)
+// retorna esse array contendo todos os usuários encontrados
 export const getUsers = async (query = {}) => {
   let sql = 'SELECT * FROM users';
   const params = [];
@@ -24,13 +23,11 @@ export const getUsers = async (query = {}) => {
   return rows;
 };
 
-
-/**
- * cria um novo usuário
- * 1. executa INSERT na tabela users com os dados fornecidos (req.body do controller)
- * 2. usa nullish coalescing ?? para definir active = true como padrão se não fornecido
- * 3. retorna o objeto do usuário criado com o ID gerado pelo banco
- */
+// executa uma função assíncrona que cria um novo usuário no sistema
+// recebe os dados do usuário (nome, email, active) vindos do controller (req.body)
+// executa um INSERT na tabela users usando prepared statement para evitar SQL injection
+// usa nullish coalescing (??) para definir active = true se não for fornecido
+// retorna um objeto com o id gerado pelo banco e os dados do usuário criado
 export const createUser = async (data) => {
   const [result] = await db.query(
     'INSERT INTO users (name, email, active) VALUES (?, ?, ?)',
@@ -43,14 +40,12 @@ export const createUser = async (data) => {
   };
 };
 
-
-/**
- * atualiza parcial ou totalmente um usuário pelo ID
- * 1. verifica se o usuário existe no banco
- * 2. se não existir, lança erro
- * 3. para cada campo, usa o valor fornecido ou mantém o valor atual através do nullish coalescing (??)
- * 4. executa UPDATE e busca o usuário atualizado para retornar
- */
+// executa uma função assíncrona que atualiza parcial ou totalmente um usuário pelo ID
+// recebe o id do usuário e os dados a serem atualizados (vindos do controller)
+// primeiro busca o usuário pelo id para verificar se existe
+// se não existir, lança erro
+// para cada campo, usa o valor fornecido ou mantém o valor atual usando nullish coalescing (??)
+// executa o UPDATE no banco e depois busca o usuário atualizado para retornar
 export const updateUser = async (id, data) => {
   const [existing] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
   if (existing.length === 0) {

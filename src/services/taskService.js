@@ -37,23 +37,23 @@ export const getTasks = async (query = {}) => {
 //ele retorna o valor da direita, ele retorna uma tarefa com o id gerado pelo banco de dados com os valores
 //que o cliente definiu, os ...data ajuda a nao repetir o codigo senao tinha que coloca titulo = data.titulo
 //categoria = data.categoria e por ai adiante.
-export const createTask = async (data) => {
+export const createTask = async (body) => {
 
   const [result] = await db.query(
     'INSERT INTO tasks (titulo, categoria, concluida, responsavelNome, dataConclusao) VALUES (?, ?, ?, ?, ?)',
-    [data.titulo, data.categoria, data.concluida ?? false, data.responsavelNome, data.dataConclusao ?? null]
+    [body.titulo, body.categoria, body.concluida ?? false, body.responsavelNome, body.dataConclusao ?? null]
   );
 
   return {
     id: result.insertId,
-    ...data,
-    concluida: data.concluida ?? false,
-    dataConclusao: data.dataConclusao ?? null
+    ...body,
+    concluida: body.concluida ?? false,
+    dataConclusao: body.dataConclusao ?? null
   };
 };
 
-//executa um funcao asyncrona que recebe o id da tarefa e a data, pelo controller, o id é o req.param.id
-// e o data é o req.body no controller enviado pelo cliente atraves do id da rota put e body da requisicao
+//executa um funcao asyncrona que recebe o id da tarefa e o body, pelo controller, o id é o req.param.id
+// e o body é o req.body no controller enviado pelo cliente atraves do id da rota put e body da requisicao
 // depois executa uma instrucao sql atraves do db.query para buscar a tarefa pelo id, se o lenght for 0 significa 
 // que a tarefa nao existe e lança um erro, se existir ele pega a tarefa existente e realiza outra instrucao
 //de SQL para atualizar a tarefa, em que os ? serao substituidos pelo valores de entrada, usando o ??
@@ -61,29 +61,38 @@ export const createTask = async (data) => {
 //depois guarda esse objeto no array updated e retorna o primeiro elemento do array que a tarefa é
 //atualizada
 
-export const updateTask = async (id, data) => {
-  const [existing] = await db.query('SELECT * FROM tasks WHERE id = ?', [id]);
+export const updateTask = async (id, body) => {
+  const [rows] = await db.query('SELECT * FROM tasks WHERE id = ?', [id]);
   
-  if (existing.length === 0) {
+  if (rows.length === 0) {
     throw new Error("Tarefa não encontrada");
   }
 
-  const task = existing[0];
+  const task = rows[0]; 
+  
+  const newTask = {   
+      titulo : body.titulo ?? task.titulo,
+      categoria : body.categoria ?? task.categoria,
+      concluida : body.concluida ?? task.concluida,
+      responsavelNome : body.responsavelNome ?? task.responsavelNome,
+      dataConclusao : body.dataConclusao ?? task.dataConclusao,
+      id: task.id
+  };
+
   await db.query(
     'UPDATE tasks SET titulo = ?, categoria = ?, concluida = ?, responsavelNome = ?, dataConclusao = ? WHERE id = ?',
     [
-      data.titulo ?? task.titulo,
-      data.categoria ?? task.categoria,
-      data.concluida ?? task.concluida,
-      data.responsavelNome ?? task.responsavelNome,
-      data.dataConclusao ?? task.dataConclusao,
-      id
+      newTask.titulo,
+      newTask.categoria,
+      newTask.concluida,
+      newTask.responsavelNome,
+      newTask.dataConclusao,
+      newTask.id
     ]
   );
-
-  const [updated] = await db.query('SELECT * FROM tasks WHERE id = ?', [id]);
-  return updated[0];
-};
+  
+  return newTask; 
+}
 
 //executa um funcao asyncrona que recebe o id da tarefa pelo controller, o id é o id.param que é o
 //o id da rota passado pelo requiscao DELETE do cliente, execura uma instrucao sql atraves do db.query
@@ -130,26 +139,26 @@ export const getTasksByUserId = async (userId) => {
 };
 
 //executa um funcao asyncrona que recebe o id da tarefa e o id da tag atraves do controller, ou seja 
-//o task id é enviado pelo cliente atraves do id da rota, id.param e o tagdata é o req.body no controller
+//o task id é enviado pelo cliente atraves do id da rota, id.param e o tagBody é o req.body no controller
 //que é enviado pelo cliente atraves do req.body, a instrucao consulta a tabela e se 
 //a tag ja existir associada à tarefa manda um erro, se existir, é criada uma nova instrucao para 
 // inserir a tag na tarefa, executa uma instrucao em que o ? sao substituios pelos valores do array 
 // que o cliente enviou, depois retorna uma mensagem de sucesso para o cliente.
-export const addTagToTask = async (taskId, tagData) => {
+export const addTagToTask = async (taskId, tagBody) => {
 
-  const [alreadyExists] = await db.query(
+  const [rows] = await db.query(
     'SELECT * FROM task_tags WHERE task_id = ? AND tag_id = ?',
-    [taskId, tagData.tag_id]
+    [taskId, tagBody.tag_id]
   );
   
   
-  if (alreadyExists.length > 0) {
+  if (rows.length > 0) {
     throw new Error("Tag já associada a esta task");
   }
 
   await db.query(
     'INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?)',
-    [taskId, tagData.tag_id]
+    [taskId, tagBody.tag_id]
   );
   
   return { message: "Tag adicionada à task com sucesso" };
