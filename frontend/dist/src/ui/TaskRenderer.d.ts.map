@@ -1,0 +1,1 @@
+{"version":3,"file":"TaskRenderer.d.ts","sourceRoot":"","sources":["../../../src/ui/TaskRenderer.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAC;AAiB9C,qBAAa,YAAY;IACvB,OAAO,CAAC,WAAW,CAAc;;IAMjC,OAAO,CAAC,UAAU;IAOlB,aAAa,CAAC,IAAI,EAAE,IAAI,GAAG,MAAM;IAyB3B,eAAe,CAAC,SAAS,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;CAY7D"}

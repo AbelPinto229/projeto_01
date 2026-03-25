@@ -1,0 +1,1 @@
+{"version":3,"file":"UserRenderer.d.ts","sourceRoot":"","sources":["../../../src/ui/UserRenderer.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAC;AAG9C,qBAAa,YAAY;IACvB,OAAO,CAAC,WAAW,CAAc;;IAMjC,aAAa,CAAC,IAAI,EAAE,IAAI,GAAG,MAAM;IAqB3B,eAAe,CAAC,SAAS,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;CAY7D"}
