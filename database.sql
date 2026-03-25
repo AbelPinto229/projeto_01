@@ -1,6 +1,6 @@
--- ==================================================
--- Script SQL para criar banco de dados da API
--- ==================================================
+-- Criar schema se não existir
+CREATE SCHEMA IF NOT EXISTS primeira_api;
+
 
 -- Remover tabelas existentes (ordem importante por causa das foreign keys)
 DROP TABLE IF EXISTS comments;
