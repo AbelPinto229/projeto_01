@@ -18,7 +18,7 @@ export class TaskService {
   private nextId: number = 10;
 
   // Get all tasks with optional filters
-  async getTasks(search?: string, sort?: 'asc' | 'desc'): Promise<Task[]> {
+  getTasks(search?: string, sort?: 'asc' | 'desc'): Task[] {
     let filtered = [...this.tasks];
 
     if (search) {
@@ -34,26 +34,26 @@ export class TaskService {
       filtered.sort((a, b) => b.titulo.localeCompare(a.titulo));
     }
 
-    return Promise.resolve(filtered);
+    return filtered;
   }
 
   // Get task statistics
-  async getTaskStats(): Promise<TaskStats> {
+  getTaskStats(): TaskStats {
     const total = this.tasks.length;
     const concluidas = this.tasks.filter(t => t.concluida).length;
     const pendentes = total - concluidas;
     const percentagem = Math.round((concluidas / total) * 100);
 
-    return Promise.resolve({
+    return {
       total,
       concluidas,
       pendentes,
       percentagem
-    });
+    };
   }
 
   // Create new task
-  async createTask(titulo: string, categoria: string, responsavelNome: string): Promise<Task> {
+  createTask(titulo: string, categoria: string, responsavelNome: string): Task {
     const newTask: Task = {
       id: this.nextId++,
       titulo,
@@ -65,50 +65,49 @@ export class TaskService {
     };
 
     this.tasks.push(newTask);
-    return Promise.resolve(newTask);
+    return newTask;
   }
 
   // Get specific task
-  async getTask(id: number): Promise<Task> {
+  getTask(id: number): Task {
     const task = this.tasks.find(t => t.id === id);
     if (!task) throw new Error('Tarefa não encontrada');
-    return Promise.resolve(task);
+    return task;
   }
 
   // Update task
-  async updateTask(id: number, titulo: string, categoria: string, responsavelNome: string): Promise<Task> {
+  updateTask(id: number, titulo: string, categoria: string, responsavelNome: string): Task {
     const task = this.tasks.find(t => t.id === id);
     if (!task) throw new Error('Tarefa não encontrada');
 
     task.titulo = titulo;
     task.categoria = categoria;
     task.responsavelNome = responsavelNome;
-    return Promise.resolve(task);
+    return task;
   }
 
   // Toggle task completion status
-  async toggleTaskStatus(id: number): Promise<Task> {
+  toggleTaskStatus(id: number): Task {
     const task = this.tasks.find(t => t.id === id);
     if (!task) throw new Error('Tarefa não encontrada');
 
     task.concluida = !task.concluida;
     task.dataConclusao = task.concluida ? new Date().toISOString().split('T')[0] : null;
-    return Promise.resolve(task);
+    return task;
   }
 
   // Delete task
-  async deleteTask(id: number): Promise<void> {
+  deleteTask(id: number): void {
     this.tasks = this.tasks.filter(t => t.id !== id);
-    return Promise.resolve();
   }
 
   // Add tag to task (mock)
-  async addTagToTask(taskId: number, tagId: number): Promise<void> {
-    return Promise.resolve();
+  addTagToTask(taskId: number, tagId: number): void {
+    return;
   }
 
   // Get task comments (mock)
-  async getTaskComments(id: number): Promise<any[]> {
-    return Promise.resolve([]);
+  getTaskComments(id: number): any[] {
+    return [];
   }
 }

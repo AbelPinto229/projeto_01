@@ -22,45 +22,78 @@ export class TaskRenderer {
     this.taskService = new TaskService();
   }
 
-  private renderTags(taskId: number): string {
+  private renderTags(taskId: number): HTMLSpanElement[] {
     const tags = taskTags.get(taskId) || [];
-    return tags
-      .map(tag => `<span class="inline-block px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded mr-1">${tag}</span>`)
-      .join('');
+    return tags.map(tag => {
+      const element = document.createElement('span');
+      element.className = 'tag-pill';
+      element.textContent = tag;
+      return element;
+    });
   }
 
-  renderTaskRow(task: Task): string {
+  private createActionButton(action: string, taskId: number, label: string): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.className = 'action-btn';
+    button.setAttribute('data-action', action);
+    button.setAttribute('data-task-id', String(taskId));
+    button.textContent = label;
+    return button;
+  }
+
+  renderTaskRow(task: Task): HTMLTableRowElement {
     const statusClass = TaskUtils.getStatusBadgeColor(task.concluida);
     const statusText = TaskUtils.getStatusText(task.concluida);
-    const tags = this.renderTags(task.id);
+    const row = document.createElement('tr');
+    row.className = 'table-row';
 
-    return `
-      <tr class="hover:bg-slate-50 transition-colors">
-        <td class="px-4 py-3 text-sm font-medium text-slate-900">${task.titulo}</td>
-        <td class="px-4 py-3 text-sm text-slate-600">${task.categoria}</td>
-        <td class="px-4 py-3 text-sm text-slate-600">${task.responsavelNome}</td>
-        <td class="px-4 py-3 text-sm">${tags}</td>
-        <td class="px-4 py-3">
-          <span class="px-2 py-1 text-xs font-semibold ${statusClass} rounded">${statusText}</span>
-        </td>
-        <td class="px-4 py-3 text-sm text-slate-500">${new Date(task.created_at).toLocaleDateString('pt-PT')}</td>
-        <td class="px-4 py-3 flex gap-2">
-          <button data-action="view-details" data-task-id="${task.id}" class="px-2 py-1 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded">Ver</button>
-          <button data-action="edit" data-task-id="${task.id}" class="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded">Editar</button>
-          <button data-action="toggle-status" data-task-id="${task.id}" class="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded">Alternar</button>
-          <button data-action="delete" data-task-id="${task.id}" class="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded">Deletar</button>
-        </td>
-      </tr>
-    `;
+    const titleCell = document.createElement('td');
+    titleCell.textContent = task.titulo;
+
+    const categoryCell = document.createElement('td');
+    categoryCell.textContent = task.categoria;
+
+    const ownerCell = document.createElement('td');
+    ownerCell.textContent = task.responsavelNome;
+
+    const tagsCell = document.createElement('td');
+    this.renderTags(task.id).forEach(tagElement => tagsCell.appendChild(tagElement));
+
+    const statusCell = document.createElement('td');
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `status-badge ${statusClass}`;
+    statusBadge.textContent = statusText;
+    statusCell.appendChild(statusBadge);
+
+    const createdAtCell = document.createElement('td');
+    createdAtCell.textContent = new Date(task.created_at).toLocaleDateString('pt-PT');
+
+    const actionsCell = document.createElement('td');
+    actionsCell.appendChild(this.createActionButton('view-details', task.id, 'Ver'));
+    actionsCell.appendChild(this.createActionButton('edit', task.id, 'Editar'));
+    actionsCell.appendChild(this.createActionButton('toggle-status', task.id, 'Alternar'));
+    actionsCell.appendChild(this.createActionButton('delete', task.id, 'Deletar'));
+
+    row.appendChild(titleCell);
+    row.appendChild(categoryCell);
+    row.appendChild(ownerCell);
+    row.appendChild(tagsCell);
+    row.appendChild(statusCell);
+    row.appendChild(createdAtCell);
+    row.appendChild(actionsCell);
+
+    return row;
   }
 
-  async renderTasksList(container: HTMLElement): Promise<void> {
+  renderTasksList(container: HTMLElement): void {
     try {
-      const tasks = await this.taskService.getTasks();
-      const html = tasks.map(task => this.renderTaskRow(task)).join('');
+      const tasks = this.taskService.getTasks();
       const tbody = container.querySelector('tbody');
       if (tbody) {
-        tbody.innerHTML = html;
+        tbody.textContent = '';
+        tasks.forEach(task => {
+          tbody.appendChild(this.renderTaskRow(task));
+        });
       }
     } catch (error) {
       console.error('Erro ao renderizar tarefas:', error);

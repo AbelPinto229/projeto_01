@@ -3,7 +3,8 @@ export declare class TaskRenderer {
     private taskService;
     constructor();
     private renderTags;
-    renderTaskRow(task: Task): string;
-    renderTasksList(container: HTMLElement): Promise<void>;
+    private createActionButton;
+    renderTaskRow(task: Task): HTMLTableRowElement;
+    renderTasksList(container: HTMLElement): void;
 }
 //# sourceMappingURL=TaskRenderer.d.ts.map

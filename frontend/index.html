@@ -3,114 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Task Manager Frontend</title>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                50: '#edf7ff',
-                100: '#d8ecff',
-                600: '#00639a',
-                700: '#004f7a'
-              },
-              accent: {
-                100: '#ffe6ea',
-                600: '#e63946'
-              }
-            }
-          }
-        }
-      };
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      .modal-hidden {
-        display: none;
-      }
-
-      .modal-visible {
-        display: flex;
-      }
-    </style>
+    <title>clickup da TEMU</title>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="min-h-screen bg-gradient-to-br from-sky-50 via-amber-50 to-rose-50 text-slate-800">
-    <div class="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-      <header class="mb-8 rounded-3xl border border-sky-200/70 bg-white/90 p-6 shadow-lg shadow-sky-100/70 backdrop-blur">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Task Manager</h1>
-            <p class="mt-1 text-sm text-slate-600">Gestao de utilizadores, tarefas e tags com interface moderna.</p>
-          </div>
-
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div class="rounded-xl bg-sky-100/70 px-4 py-2 text-sm text-slate-700">
-              Role atual:
-              <span id="currentRole" class="font-semibold text-slate-900">Admin</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="setRole('admin')" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm">Admin</button>
-              <button type="button" onclick="setRole('manager')" class="rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white shadow-sm">Manager</button>
-              <button type="button" onclick="setRole('member')" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm">Member</button>
-              <button type="button" onclick="setRole('viewer')" class="rounded-lg bg-rose-500 px-3 py-2 text-xs font-semibold text-white shadow-sm">Viewer</button>
-            </div>
-          </div>
+  <body>
+    <div class="app">
+      <header class="card header">
+        <h1 class="title">clickup da TEMU</h1>
+        <div class="role-box">
+          <span class="role-label">Role atual: <strong id="currentRole">Admin</strong></span>
+          <button type="button" onclick="setRole('admin')" class="role-btn role-admin">Admin</button>
+          <button type="button" onclick="setRole('manager')" class="role-btn role-manager">Manager</button>
+          <button type="button" onclick="setRole('member')" class="role-btn role-member">Member</button>
+          <button type="button" onclick="setRole('viewer')" class="role-btn role-viewer">Viewer</button>
         </div>
       </header>
 
-      <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <article class="rounded-2xl border border-sky-100 bg-white p-5 shadow-md shadow-sky-100/60">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Utilizadores</p>
-          <p id="totalUsers" class="mt-2 text-3xl font-bold text-slate-900">0</p>
-          <p class="mt-2 text-sm text-slate-600">Ativos: <span id="activeUsers" class="font-semibold text-emerald-700">0</span></p>
-          <p class="text-sm text-slate-600">Percentagem: <span id="activePercentage" class="font-semibold">0%</span></p>
+      <section class="stats-grid">
+        <article class="card stat-card">
+          <p class="stat-title">Utilizadores</p>
+          <p id="totalUsers" class="stat-value">0</p>
+          <p>Ativos: <strong id="activeUsers">0</strong></p>
+          <p>Percentagem: <strong id="activePercentage">0%</strong></p>
         </article>
 
-        <article class="rounded-2xl border border-emerald-100 bg-white p-5 shadow-md shadow-emerald-100/50">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tarefas</p>
-          <p id="totalTasks" class="mt-2 text-3xl font-bold text-slate-900">0</p>
-          <p class="mt-2 text-sm text-slate-600">Concluidas: <span id="completedTasks" class="font-semibold text-emerald-700">0</span></p>
-          <p class="text-sm text-slate-600">Pendentes: <span id="pendingTasks" class="font-semibold text-amber-700">0</span></p>
+        <article class="card stat-card">
+          <p class="stat-title">Tarefas</p>
+          <p id="totalTasks" class="stat-value">0</p>
+          <p>Concluidas: <strong id="completedTasks">0</strong></p>
+          <p>Pendentes: <strong id="pendingTasks">0</strong></p>
         </article>
 
-        <article class="rounded-2xl border border-rose-100 bg-white p-5 shadow-md shadow-rose-100/50 md:col-span-2 xl:col-span-1">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tags</p>
-          <div class="mt-3 flex gap-2">
-            <input id="newTagName" type="text" placeholder="Nova tag" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
-            <button id="createTagBtn" type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">Criar</button>
+        <article class="card stat-card">
+          <p class="stat-title">Tags</p>
+          <div class="tags-tools">
+            <input id="newTagName" class="input" type="text" placeholder="Nova tag" />
+            <button id="createTagBtn" type="button" class="btn btn-primary">Criar</button>
           </div>
-          <div id="tagsList" class="mt-4 flex flex-wrap gap-2"></div>
+          <div id="tagsList" class="tags-list"></div>
         </article>
       </section>
 
-      <section class="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-md">
-        <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h2 class="text-xl font-bold text-slate-900">Tarefas</h2>
-          <div class="flex flex-col gap-3 sm:flex-row">
-            <input id="taskSearchInput" type="search" placeholder="Pesquisar tarefas" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none sm:w-72" />
-            <button id="createTaskBtn" type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">Nova Tarefa</button>
+      <section class="card section">
+        <div class="section-header">
+          <h2 class="section-title">Tarefas</h2>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input id="taskSearchInput" class="input" type="search" placeholder="Pesquisar tarefas" />
+            <button id="createTaskBtn" type="button" class="btn btn-primary">Nova Tarefa</button>
           </div>
         </div>
 
-        <div class="mb-4 flex flex-wrap gap-2">
-          <button type="button" data-status="all" class="task-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-blue-700 text-white">Todas</button>
-          <button type="button" data-status="pending" class="task-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-amber-50 text-amber-700">Pendentes</button>
-          <button type="button" data-status="in-progress" class="task-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-cyan-50 text-cyan-700">Em Progresso</button>
-          <button type="button" data-status="completed" class="task-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-emerald-50 text-emerald-700">Concluidas</button>
+        <div class="filters">
+          <button type="button" data-status="all" class="task-filter-btn active">Todas</button>
+          <button type="button" data-status="pending" class="task-filter-btn">Pendentes</button>
+          <button type="button" data-status="in-progress" class="task-filter-btn">Em Progresso</button>
+          <button type="button" data-status="completed" class="task-filter-btn">Concluidas</button>
         </div>
 
-        <div class="overflow-x-auto">
-          <table id="taskTable" class="min-w-full border-separate border-spacing-0">
+        <div class="table-wrap">
+          <table id="taskTable" class="table">
             <thead>
-              <tr class="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
-                <th class="rounded-l-lg px-4 py-3">Titulo</th>
-                <th class="px-4 py-3">Categoria</th>
-                <th class="px-4 py-3">Responsavel</th>
-                <th class="px-4 py-3">Tags</th>
-                <th class="px-4 py-3">Estado</th>
-                <th class="px-4 py-3">Criacao</th>
-                <th class="rounded-r-lg px-4 py-3">Acoes</th>
+              <tr>
+                <th>Titulo</th>
+                <th>Categoria</th>
+                <th>Responsavel</th>
+                <th>Tags</th>
+                <th>Estado</th>
+                <th>Criacao</th>
+                <th>Acoes</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -118,25 +78,27 @@
         </div>
       </section>
 
-      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-md">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-xl font-bold text-slate-900">Utilizadores</h2>
-          <button id="createUserBtn" type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">Novo Utilizador</button>
+      <section class="card section">
+        <div class="section-header">
+          <h2 class="section-title">Utilizadores</h2>
+          <button id="createUserBtn" type="button" class="btn btn-primary">Novo Utilizador</button>
         </div>
-        <div class="mb-4 flex flex-wrap gap-2">
-          <button type="button" data-status="all" class="user-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-blue-700 text-white">Todos</button>
-          <button type="button" data-status="active" class="user-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-emerald-50 text-emerald-700">Ativos</button>
-          <button type="button" data-status="inactive" class="user-filter-btn rounded-lg px-3 py-2 text-xs font-semibold bg-rose-50 text-rose-700">Inativos</button>
+
+        <div class="filters">
+          <button type="button" data-status="all" class="user-filter-btn active">Todos</button>
+          <button type="button" data-status="active" class="user-filter-btn">Ativos</button>
+          <button type="button" data-status="inactive" class="user-filter-btn">Inativos</button>
         </div>
-        <div class="overflow-x-auto">
-          <table id="userTable" class="min-w-full border-separate border-spacing-0">
+
+        <div class="table-wrap">
+          <table id="userTable" class="table">
             <thead>
-              <tr class="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
-                <th class="rounded-l-lg px-4 py-3">Nome</th>
-                <th class="px-4 py-3">Email</th>
-                <th class="px-4 py-3">Estado</th>
-                <th class="px-4 py-3">Criacao</th>
-                <th class="rounded-r-lg px-4 py-3">Acoes</th>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Criacao</th>
+                <th>Acoes</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -145,74 +107,72 @@
       </section>
     </div>
 
-    <div id="userModal" class="modal-hidden fixed inset-0 z-40 items-center justify-center bg-slate-900/50 p-4">
-      <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-        <h3 id="userModalTitle" class="text-xl font-bold text-slate-900">Novo Utilizador</h3>
-        <form id="userForm" class="mt-4 space-y-4">
+    <div id="userModal" class="modal-hidden">
+      <div class="modal-content">
+        <h3 id="userModalTitle" class="modal-title">Novo Utilizador</h3>
+        <form id="userForm">
           <input id="userId" type="hidden" />
-          <div>
-            <label for="userName" class="mb-1 block text-sm font-medium text-slate-700">Nome</label>
-            <input id="userName" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
+          <div class="form-grid">
+            <div class="field field-full">
+              <label for="userName">Nome</label>
+              <input id="userName" class="input" required />
+            </div>
+            <div class="field field-full">
+              <label for="userEmail">Email</label>
+              <input id="userEmail" class="input" type="email" required />
+            </div>
+            <div class="field field-full">
+              <label for="userStatus">Estado</label>
+              <select id="userStatus" class="select">
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="userEmail" class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-            <input id="userEmail" type="email" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
-          </div>
-          <div>
-            <label for="userStatus" class="mb-1 block text-sm font-medium text-slate-700">Estado</label>
-            <select id="userStatus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
-            </select>
-          </div>
-          <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeUserModal()" class="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600">Cancelar</button>
-            <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">Guardar</button>
+          <div class="form-actions">
+            <button type="button" onclick="closeUserModal()" class="btn btn-neutral">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
           </div>
         </form>
       </div>
     </div>
 
-    <div id="taskModal" class="modal-hidden fixed inset-0 z-40 items-center justify-center bg-slate-900/50 p-4">
-      <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
-        <h3 id="taskModalTitle" class="text-xl font-bold text-slate-900">Nova Tarefa</h3>
-        <form id="taskForm" class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div id="taskModal" class="modal-hidden">
+      <div class="modal-content">
+        <h3 id="taskModalTitle" class="modal-title">Nova Tarefa</h3>
+        <form id="taskForm">
           <input id="taskId" type="hidden" />
-
-          <div class="md:col-span-2">
-            <label for="taskTitle" class="mb-1 block text-sm font-medium text-slate-700">Titulo</label>
-            <input id="taskTitle" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
+          <div class="form-grid">
+            <div class="field field-full">
+              <label for="taskTitle">Titulo</label>
+              <input id="taskTitle" class="input" required />
+            </div>
+            <div class="field">
+              <label for="taskCategory">Categoria</label>
+              <input id="taskCategory" class="input" required />
+            </div>
+            <div class="field">
+              <label for="taskResponsible">Responsavel</label>
+              <input id="taskResponsible" class="input" required />
+            </div>
+            <div class="field">
+              <label for="taskStatus">Estado</label>
+              <select id="taskStatus" class="select">
+                <option value="pending">Pendente</option>
+                <option value="in-progress">Em Progresso</option>
+                <option value="completed">Concluido</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="taskTagsSelect">Tags (multi-selecao)</label>
+              <select id="taskTagsSelect" class="select" multiple>
+                <option disabled>Selecionar tags</option>
+              </select>
+            </div>
           </div>
-
-          <div>
-            <label for="taskCategory" class="mb-1 block text-sm font-medium text-slate-700">Categoria</label>
-            <input id="taskCategory" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
-          </div>
-
-          <div>
-            <label for="taskResponsible" class="mb-1 block text-sm font-medium text-slate-700">Responsavel</label>
-            <input id="taskResponsible" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
-          </div>
-
-          <div>
-            <label for="taskStatus" class="mb-1 block text-sm font-medium text-slate-700">Estado</label>
-            <select id="taskStatus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
-              <option value="pending">Pendente</option>
-              <option value="in-progress">Em Progresso</option>
-              <option value="completed">Concluido</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="taskTagsSelect" class="mb-1 block text-sm font-medium text-slate-700">Tags (multi-selecao)</label>
-            <select id="taskTagsSelect" multiple class="h-24 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none">
-              <option disabled>Selecionar tags</option>
-            </select>
-          </div>
-
-          <div class="md:col-span-2 flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeTaskModal()" class="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600">Cancelar</button>
-            <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">Guardar</button>
+          <div class="form-actions">
+            <button type="button" onclick="closeTaskModal()" class="btn btn-neutral">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
           </div>
         </form>
       </div>

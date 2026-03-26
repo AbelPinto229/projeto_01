@@ -16,12 +16,12 @@ export class TagService {
   private nextId: number = 8;
 
   // Get all tags
-  async getTags(): Promise<Tag[]> {
-    return Promise.resolve([...this.tags]);
+  getTags(): Tag[] {
+    return [...this.tags];
   }
 
   // Create tag
-  async createTag(nome: string): Promise<Tag> {
+  createTag(nome: string): Tag {
     const newTag: Tag = {
       id: this.nextId++,
       nome,
@@ -29,17 +29,16 @@ export class TagService {
     };
 
     this.tags.push(newTag);
-    return Promise.resolve(newTag);
+    return newTag;
   }
 
   // Get tag tasks (mock)
-  async getTagTasks(id: number): Promise<any[]> {
-    return Promise.resolve([]);
+  getTagTasks(id: number): any[] {
+    return [];
   }
 
   // Delete tag
-  async deleteTag(id: number): Promise<void> {
+  deleteTag(id: number): void {
     this.tags = this.tags.filter(t => t.id !== id);
-    return Promise.resolve();
   }
 }

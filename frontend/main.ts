@@ -6,39 +6,23 @@ import { UserService } from './src/services/UserService.js';
 import { TaskService } from './src/services/TaskService.js';
 import { CommentService } from './src/services/CommentService.js';
 import { TagService } from './src/services/TagService.js';
+import { getTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask } from './src/api/apiTaskService.js';
+import { getUsers as apiGetUsers, createUser as apiCreateUser, updateUser as apiUpdateUser, deleteUser as apiDeleteUser } from './src/api/apiUserService.js';
+import { getTags as apiGetTags, createTag as apiCreateTag, deleteTag as apiDeleteTag } from './src/api/apiTagService.js';
 import { UserRenderer } from './src/ui/UserRenderer.js';
 import { TaskRenderer } from './src/ui/TaskRenderer.js';
+import { openUserModal as openUserModalUI, closeUserModal as closeUserModalUI, openTaskModal as openTaskModalUI, closeTaskModal as closeTaskModalUI, setupModalBackdropHandlers } from './src/ui/ModalManager.js';
 import { roleManager } from './src/security/RoleManager.js';
 import { systemLogger } from './src/logs/SystemLogger.js';
 import { notificationService } from './src/notifications/NotificationService.js';
+import type { Task } from './src/models/Task.js';
+import type { User } from './src/models/User.js';
+import type { Tag } from './src/models/Tag.js';
+import { canEditData as checkCanEditData, canCreateTag as checkCanCreateTag } from './src/security/permissions.js';
 
 // ============================================
 // TYPES & INTERFACES
 // ============================================
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-}
-
-interface Task {
-  id: number;
-  title: string;
-  category: string;
-  responsible: string;
-  tags: string[];
-  status: 'pending' | 'in-progress' | 'completed';
-  createdAt: string;
-}
-
-interface Tag {
-  id: number;
-  name: string;
-  color: string;
-}
 
 interface AppState {
   userService: UserService;
@@ -69,52 +53,87 @@ declare global {
 }
 
 // ============================================
-// FAKE DATA
-// ============================================
-
-const fakeUsers: User[] = [
-  { id: 1, name: 'João Silva', email: 'joao@example.com', status: 'active', createdAt: '2024-01-15' },
-  { id: 2, name: 'Maria Santos', email: 'maria@example.com', status: 'active', createdAt: '2024-01-16' },
-  { id: 3, name: 'Pedro Oliveira', email: 'pedro@example.com', status: 'inactive', createdAt: '2024-01-17' },
-  { id: 4, name: 'Ana Costa', email: 'ana@example.com', status: 'active', createdAt: '2024-01-18' },
-  { id: 5, name: 'Carlos Mendes', email: 'carlos@example.com', status: 'active', createdAt: '2024-01-19' },
-  { id: 6, name: 'Sofia Pereira', email: 'sofia@example.com', status: 'active', createdAt: '2024-01-20' },
-  { id: 7, name: 'Miguel Ferreira', email: 'miguel@example.com', status: 'inactive', createdAt: '2024-01-21' },
-  { id: 8, name: 'Beatriz Gomes', email: 'beatriz@example.com', status: 'active', createdAt: '2024-01-22' }
-];
-
-const fakeTasks: Task[] = [
-  { id: 1, title: 'Implementar autenticação', category: 'Backend', responsible: 'João Silva', tags: ['Urgente', 'Feature'], status: 'completed', createdAt: '2024-01-10' },
-  { id: 2, title: 'Criar dashboard', category: 'Frontend', responsible: 'Maria Santos', tags: ['Feature', 'UI'], status: 'in-progress', createdAt: '2024-01-11' },
-  { id: 3, title: 'Corrigir bug login', category: 'Backend', responsible: 'Pedro Oliveira', tags: ['Bug', 'Urgente'], status: 'in-progress', createdAt: '2024-01-12' },
-  { id: 4, title: 'Design do logo', category: 'Design', responsible: 'Ana Costa', tags: ['Design'], status: 'completed', createdAt: '2024-01-13' },
-  { id: 5, title: 'Documentação API', category: 'Documentation', responsible: 'Carlos Mendes', tags: ['Documentação'], status: 'pending', createdAt: '2024-01-14' },
-  { id: 6, title: 'Testes unitários', category: 'QA', responsible: 'Sofia Pereira', tags: ['Testing', 'Bug'], status: 'in-progress', createdAt: '2024-01-15' },
-  { id: 7, title: 'Deploy em produção', category: 'DevOps', responsible: 'Miguel Ferreira', tags: ['Urgente', 'Bloqueado'], status: 'pending', createdAt: '2024-01-16' },
-  { id: 8, title: 'Revisar código', category: 'Backend', responsible: 'Beatriz Gomes', tags: ['Em Revisão'], status: 'pending', createdAt: '2024-01-17' },
-  { id: 9, title: 'Otimizar performance', category: 'Frontend', responsible: 'João Silva', tags: ['Melhoria'], status: 'pending', createdAt: '2024-01-18' }
-];
-
-const fakeTags: Tag[] = [
-  { id: 1, name: 'Urgente', color: '#ff6b6b' },
-  { id: 2, name: 'Bug', color: '#ff8787' },
-  { id: 3, name: 'Feature', color: '#4c6ef5' },
-  { id: 4, name: 'Melhoria', color: '#15aabf' },
-  { id: 5, name: 'Documentação', color: '#ffd43b' },
-  { id: 6, name: 'Em Revisão', color: '#a78bfa' },
-  { id: 7, name: 'Bloqueado', color: '#ff922b' }
-];
-
-// ============================================
 // STATE VARIABLES
 // ============================================
 
 let currentRole: string = 'admin';
-let editingUserId: number | null = null;
-let editingTaskId: number | null = null;
 let currentUserFilter: 'all' | 'active' | 'inactive' = 'all';
 let currentTaskFilter: 'all' | 'pending' | 'in-progress' | 'completed' = 'all';
 let taskSearchTerm = '';
+
+
+// ============================================
+// API
+// ============================================
+
+// array local para manter o estado das tasks no frontend
+let tasks: Task[] = [];
+// array local para manter o estado dos users no frontend
+let users: User[] = [];
+// array local para manter o estado das tags no frontend
+let tags: Tag[] = [];
+
+// users
+// vai buscar users da api e atualiza o array local
+async function loadUsers() {
+  users = await apiGetUsers();
+  renderUsers();
+}
+
+// cria user na api e depois sincroniza o array local
+async function createUser(user: User) {
+  await apiCreateUser(user);
+  await loadUsers();
+}
+
+// edita user na api e depois sincroniza o array local
+async function editUser(user: User) {
+  await apiUpdateUser(user.id, user);
+  await loadUsers();
+}
+
+// apaga user na api e depois sincroniza o array local
+async function deleteUser(id: number) {
+  await apiDeleteUser(id);
+  await loadUsers();
+}
+//tags
+// vai buscar tags da api e atualiza o array local
+async function loadTags() {
+  tags = await apiGetTags();
+  renderTags();
+}
+
+// apaga tag na api e depois sincroniza o array local
+async function deleteTag(id: number) {
+  await apiDeleteTag(id);
+  await loadTags();
+}
+
+//tasks
+// vai buscar da api e atualiza e renderiza o array local 
+async function loadTasks() {
+  tasks = await getTasks();
+  renderTasks();
+}
+
+// cria task na api e depois sincroniza o array local
+async function createTask(task: Task) {
+  await apiCreateTask(task);
+  await loadTasks();
+}
+
+// edita task na api e depois sincroniza o array local
+async function editTask(task: Task) {
+  await apiUpdateTask(task.id, task);
+  await loadTasks();
+}
+
+// apaga task na api e depois sincroniza o array local
+async function deleteTask(id: number) {
+  await apiDeleteTask(id);
+  await loadTasks();
+}
 
 // ============================================
 // INITIALIZE SERVICES
@@ -150,152 +169,143 @@ window.systemLogger = systemLogger;
 // ============================================
 
 function openUserModal(userId?: number): void {
-  editingUserId = userId || null;
-  const modal = document.getElementById('userModal') as HTMLDivElement;
-  const form = document.getElementById('userForm') as HTMLFormElement;
-  const titleEl = document.getElementById('userModalTitle') as HTMLHeadingElement;
-  
-  if (userId) {
-    // Editing mode
-    const user = fakeUsers.find(u => u.id === userId);
-    if (user) {
-      titleEl.textContent = 'Editar Utilizador';
-      (document.getElementById('userId') as HTMLInputElement).value = user.id.toString();
-      (document.getElementById('userName') as HTMLInputElement).value = user.name;
-      (document.getElementById('userEmail') as HTMLInputElement).value = user.email;
-      (document.getElementById('userStatus') as HTMLSelectElement).value = user.status;
-    }
-  } else {
-    // Creating mode
-    titleEl.textContent = 'Novo Utilizador';
-    form.reset();
-    (document.getElementById('userId') as HTMLInputElement).value = '';
-  }
-  
-  modal.classList.remove('modal-hidden');
-  modal.classList.add('modal-visible');
+  openUserModalUI({ userId, users, canEditData: checkCanEditData(currentRole) });
 }
 
 function closeUserModal(): void {
-  const modal = document.getElementById('userModal') as HTMLDivElement;
-  modal.classList.remove('modal-visible');
-  modal.classList.add('modal-hidden');
-  editingUserId = null;
+  closeUserModalUI();
 }
 
 function openTaskModal(taskId?: number): void {
-  editingTaskId = taskId || null;
-  const modal = document.getElementById('taskModal') as HTMLDivElement;
-  const form = document.getElementById('taskForm') as HTMLFormElement;
-  const titleEl = document.getElementById('taskModalTitle') as HTMLHeadingElement;
-  const select = document.getElementById('taskTagsSelect') as HTMLSelectElement;
-  
-  if (taskId) {
-    // Editing mode
-    const task = fakeTasks.find(t => t.id === taskId);
-    if (task) {
-      titleEl.textContent = 'Editar Tarefa';
-      (document.getElementById('taskId') as HTMLInputElement).value = task.id.toString();
-      (document.getElementById('taskTitle') as HTMLInputElement).value = task.title;
-      (document.getElementById('taskCategory') as HTMLInputElement).value = task.category;
-      (document.getElementById('taskResponsible') as HTMLInputElement).value = task.responsible;
-      (document.getElementById('taskStatus') as HTMLSelectElement).value = task.status;
-      
-      // Select the tags for this task
-      Array.from(select.options).forEach(option => {
-        option.selected = task.tags.includes(option.value);
-      });
-    }
-  } else {
-    // Creating mode
-    titleEl.textContent = 'Nova Tarefa';
-    form.reset();
-    (document.getElementById('taskId') as HTMLInputElement).value = '';
-    
-    // Deselect all tags
-    Array.from(select.options).forEach(option => {
-      option.selected = false;
-    });
-  }
-  
-  modal.classList.remove('modal-hidden');
-  modal.classList.add('modal-visible');
+  openTaskModalUI({ taskId, tasks, canEditData: checkCanEditData(currentRole) });
 }
 
 function closeTaskModal(): void {
-  const modal = document.getElementById('taskModal') as HTMLDivElement;
-  modal.classList.remove('modal-visible');
-  modal.classList.add('modal-hidden');
-  editingTaskId = null;
+  closeTaskModalUI();
 }
 
 // ============================================
 // RENDER FUNCTIONS
 // ============================================
 
-function renderUsers(): void {
-  const tbody = document.querySelector('#userTable tbody') as HTMLTableSectionElement;
-  const filteredUsers = getFilteredUsers();
+function getTagColor(name: string): string {
+  const palette = ['#ff6b6b', '#ff8787', '#4c6ef5', '#15aabf', '#ffd43b', '#a78bfa', '#ff922b', '#63e6be', '#ffb3ba', '#ff8fab'];
+  let hash = 0;
 
-  if (filteredUsers.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" class="px-4 py-10 text-center text-slate-500">Nenhum utilizador encontrado para o filtro atual.</td>
-      </tr>
-    `;
-    return;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+    hash |= 0;
   }
 
-  tbody.innerHTML = filteredUsers.map(user => `
-    <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
-      <td class="px-4 py-3 text-sm font-medium text-slate-800">${user.name}</td>
-      <td class="px-4 py-3 text-sm text-slate-700">${user.email}</td>
-      <td class="px-4 py-3">
-        <span class="px-3 py-1 rounded-full text-xs font-semibold ${user.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-          ${user.status === 'active' ? 'Ativo' : 'Inativo'}
-        </span>
-      </td>
-      <td class="px-4 py-3 text-sm text-slate-500">${user.createdAt}</td>
-      <td class="px-4 py-3">
-        <button class="edit-user-btn inline-flex items-center rounded-md bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600" data-user-id="${user.id}">Editar</button>
-      </td>
-    </tr>
-  `).join('');
-  
-  // Add edit listeners
-  document.querySelectorAll('.edit-user-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const userId = parseInt((e.target as HTMLElement).getAttribute('data-user-id') || '0');
-      openUserModal(userId);
-    });
-  });
+  return palette[Math.abs(hash) % palette.length];
 }
 
-function getFilteredUsers(): User[] {
-  return fakeUsers.filter(user => currentUserFilter === 'all' || user.status === currentUserFilter);
-}
-
-function updateUserFilterButtonsUI(): void {
+function updateUserFilterButtonsUI(filter: 'all' | 'active' | 'inactive'): void {
   document.querySelectorAll('.user-filter-btn').forEach(button => {
     const element = button as HTMLButtonElement;
     const status = element.getAttribute('data-status');
-    const isActive = status === currentUserFilter;
-
-    if (isActive) {
-      element.classList.remove('bg-emerald-50', 'text-emerald-700', 'bg-rose-50', 'text-rose-700', 'bg-blue-50', 'text-blue-700');
-      element.classList.add('bg-blue-700', 'text-white');
-    } else {
-      element.classList.remove('bg-blue-700', 'text-white');
-
-      if (status === 'active') {
-        element.classList.add('bg-emerald-50', 'text-emerald-700');
-      } else if (status === 'inactive') {
-        element.classList.add('bg-rose-50', 'text-rose-700');
-      } else {
-        element.classList.add('bg-blue-50', 'text-blue-700');
-      }
-    }
+    element.classList.toggle('active', status === filter);
   });
+}
+
+function updateTaskFilterButtonsUI(filter: 'all' | 'pending' | 'in-progress' | 'completed'): void {
+  document.querySelectorAll('.task-filter-btn').forEach(button => {
+    const element = button as HTMLButtonElement;
+    const status = element.getAttribute('data-status');
+    element.classList.toggle('active', status === filter);
+  });
+}
+
+function populateTaskTagsDropdown(): void {
+  const select = document.getElementById('taskTagsSelect') as HTMLSelectElement | null;
+  if (!select) return;
+
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+
+  tags.forEach(tag => {
+    const option = document.createElement('option');
+    option.value = tag.nome;
+    option.textContent = tag.nome;
+    select.appendChild(option);
+  });
+}
+
+function renderUsers(): void {
+  const tbody = document.querySelector('#userTable tbody') as HTMLTableSectionElement | null;
+  if (!tbody) return;
+
+  const filteredUsers = users.filter(user => {
+    if (currentUserFilter === 'active') return user.active;
+    if (currentUserFilter === 'inactive') return !user.active;
+    return true;
+  });
+
+  tbody.textContent = '';
+
+  if (filteredUsers.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.className = 'empty-row';
+    cell.textContent = 'Nenhum utilizador encontrado para o filtro atual.';
+    row.appendChild(cell);
+    tbody.appendChild(row);
+    return;
+  }
+
+  filteredUsers.forEach(user => {
+    const row = document.createElement('tr');
+    row.className = 'table-row';
+
+    const nameCell = document.createElement('td');
+    nameCell.textContent = user.name;
+
+    const emailCell = document.createElement('td');
+    emailCell.textContent = user.email;
+
+    const statusCell = document.createElement('td');
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `status-badge ${user.active ? 'status-active' : 'status-inactive'}`;
+    statusBadge.textContent = user.active ? 'Ativo' : 'Inativo';
+    statusCell.appendChild(statusBadge);
+
+    const createdAtCell = document.createElement('td');
+    createdAtCell.textContent = user.created_at;
+
+    const actionCell = document.createElement('td');
+    if (checkCanEditData(currentRole)) {
+      const editButton = document.createElement('button');
+      editButton.className = 'action-btn';
+      editButton.textContent = 'Editar';
+      editButton.addEventListener('click', () => openUserModal(user.id));
+
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'action-btn';
+      deleteButton.textContent = 'Apagar';
+      deleteButton.addEventListener('click', async () => {
+        await deleteUser(user.id);
+      });
+
+      actionCell.appendChild(editButton);
+      actionCell.appendChild(deleteButton);
+    } else {
+      const noPermission = document.createElement('span');
+      noPermission.className = 'no-permission';
+      noPermission.textContent = 'Sem permissao';
+      actionCell.appendChild(noPermission);
+    }
+
+    row.appendChild(nameCell);
+    row.appendChild(emailCell);
+    row.appendChild(statusCell);
+    row.appendChild(createdAtCell);
+    row.appendChild(actionCell);
+    tbody.appendChild(row);
+  });
+
+  updateStats();
 }
 
 function setupUserControls(): void {
@@ -306,95 +316,99 @@ function setupUserControls(): void {
       if (!status) return;
 
       currentUserFilter = status;
-      updateUserFilterButtonsUI();
+      updateUserFilterButtonsUI(currentUserFilter);
       renderUsers();
     });
   });
 
-  updateUserFilterButtonsUI();
+  updateUserFilterButtonsUI(currentUserFilter);
 }
 
 function renderTasks(): void {
-  const tbody = document.querySelector('#taskTable tbody') as HTMLTableSectionElement;
-  const filteredTasks = getFilteredTasks();
+  const tbody = document.querySelector('#taskTable tbody') as HTMLTableSectionElement | null;
+  if (!tbody) return;
+
+  const term = taskSearchTerm.trim().toLowerCase();
+  const filteredTasks = tasks.filter(task => {
+    if (currentTaskFilter === 'completed' && !task.concluida) return false;
+    if (currentTaskFilter === 'pending' && task.concluida) return false;
+    if (!term) return true;
+
+    const searchable = `${task.titulo} ${task.categoria} ${task.responsavelNome}`.toLowerCase();
+    return searchable.includes(term);
+  });
+
+  tbody.textContent = '';
 
   if (filteredTasks.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" class="px-4 py-10 text-center text-slate-500">Nenhuma tarefa encontrada para o filtro atual.</td>
-      </tr>
-    `;
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 7;
+    cell.className = 'empty-row';
+    cell.textContent = 'Nenhuma tarefa encontrada para o filtro atual.';
+    row.appendChild(cell);
+    tbody.appendChild(row);
     return;
   }
 
-  tbody.innerHTML = filteredTasks.map(task => `
-    <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
-      <td class="px-4 py-3 text-sm font-medium text-slate-800">${task.title}</td>
-      <td class="px-4 py-3 text-sm text-slate-700">${task.category}</td>
-      <td class="px-4 py-3 text-sm text-slate-700">${task.responsible}</td>
-      <td class="px-4 py-3">
-        <div class="flex gap-2">
-          ${task.tags.map(tag => `<span class="px-2.5 py-1 text-xs rounded-full bg-brand-100 text-brand-700 font-medium">${tag}</span>`).join('')}
-        </div>
-      </td>
-      <td class="px-4 py-3">
-        <span class="px-2.5 py-1 text-xs rounded-full font-semibold ${task.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : task.status === 'in-progress' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-700'}">
-          ${task.status === 'completed' ? 'Concluido' : task.status === 'in-progress' ? 'Em Progresso' : 'Pendente'}
-        </span>
-      </td>
-      <td class="px-4 py-3 text-sm text-slate-500">${task.createdAt}</td>
-      <td class="px-4 py-3">
-        <button class="edit-task-btn inline-flex items-center rounded-md bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600" data-task-id="${task.id}">Editar</button>
-      </td>
-    </tr>
-  `).join('');
-  
-  // Add edit listeners
-  document.querySelectorAll('.edit-task-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const taskId = parseInt((e.target as HTMLElement).getAttribute('data-task-id') || '0');
-      openTaskModal(taskId);
-    });
-  });
-}
+  filteredTasks.forEach(task => {
+    const row = document.createElement('tr');
+    row.className = 'table-row';
 
-function getFilteredTasks(): Task[] {
-  const term = taskSearchTerm.trim().toLowerCase();
+    const titleCell = document.createElement('td');
+    titleCell.textContent = task.titulo;
 
-  return fakeTasks.filter(task => {
-    const matchesStatus = currentTaskFilter === 'all' || task.status === currentTaskFilter;
-    if (!matchesStatus) return false;
+    const categoryCell = document.createElement('td');
+    categoryCell.textContent = task.categoria;
 
-    if (!term) return true;
+    const responsibleCell = document.createElement('td');
+    responsibleCell.textContent = task.responsavelNome;
 
-    const searchable = `${task.title} ${task.category} ${task.responsible} ${task.tags.join(' ')}`.toLowerCase();
-    return searchable.includes(term);
-  });
-}
+    const tagsCell = document.createElement('td');
 
-function updateTaskFilterButtonsUI(): void {
-  document.querySelectorAll('.task-filter-btn').forEach(button => {
-    const element = button as HTMLButtonElement;
-    const status = element.getAttribute('data-status');
-    const isActive = status === currentTaskFilter;
+    const statusCell = document.createElement('td');
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `status-badge ${task.concluida ? 'status-completed' : 'status-pending'}`;
+    statusBadge.textContent = task.concluida ? 'Concluido' : 'Pendente';
+    statusCell.appendChild(statusBadge);
 
-    if (isActive) {
-      element.classList.remove('bg-amber-50', 'text-amber-700', 'bg-emerald-50', 'text-emerald-700', 'bg-cyan-50', 'text-cyan-700', 'bg-blue-50', 'text-blue-700');
-      element.classList.add('bg-blue-700', 'text-white');
+    const createdAtCell = document.createElement('td');
+    createdAtCell.textContent = task.created_at;
+
+    const actionCell = document.createElement('td');
+    if (checkCanEditData(currentRole)) {
+      const editButton = document.createElement('button');
+      editButton.className = 'action-btn';
+      editButton.textContent = 'Editar';
+      editButton.addEventListener('click', () => openTaskModal(task.id));
+
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'action-btn';
+      deleteButton.textContent = 'Apagar';
+      deleteButton.addEventListener('click', async () => {
+        await deleteTask(task.id);
+      });
+
+      actionCell.appendChild(editButton);
+      actionCell.appendChild(deleteButton);
     } else {
-      element.classList.remove('bg-blue-700', 'text-white');
-
-      if (status === 'pending') {
-        element.classList.add('bg-amber-50', 'text-amber-700');
-      } else if (status === 'completed') {
-        element.classList.add('bg-emerald-50', 'text-emerald-700');
-      } else if (status === 'in-progress') {
-        element.classList.add('bg-cyan-50', 'text-cyan-700');
-      } else {
-        element.classList.add('bg-blue-50', 'text-blue-700');
-      }
+      const noPermission = document.createElement('span');
+      noPermission.className = 'no-permission';
+      noPermission.textContent = 'Sem permissao';
+      actionCell.appendChild(noPermission);
     }
+
+    row.appendChild(titleCell);
+    row.appendChild(categoryCell);
+    row.appendChild(responsibleCell);
+    row.appendChild(tagsCell);
+    row.appendChild(statusCell);
+    row.appendChild(createdAtCell);
+    row.appendChild(actionCell);
+    tbody.appendChild(row);
   });
+
+  updateStats();
 }
 
 function setupTaskControls(): void {
@@ -413,45 +427,47 @@ function setupTaskControls(): void {
       if (!status) return;
 
       currentTaskFilter = status;
-      updateTaskFilterButtonsUI();
+      updateTaskFilterButtonsUI(currentTaskFilter);
       renderTasks();
     });
   });
 
-  updateTaskFilterButtonsUI();
+  updateTaskFilterButtonsUI(currentTaskFilter);
 }
 
 function renderTags(): void {
-  const tagsList = document.getElementById('tagsList') as HTMLDivElement;
-  tagsList.innerHTML = fakeTags.map(tag => `
-    <span class="px-4 py-2 rounded-full text-sm font-medium text-white" style="background-color: ${tag.color}">
-      ${tag.name}
-    </span>
-  `).join('');
-  
-  // Also populate task modal dropdown
+  const tagsList = document.getElementById('tagsList') as HTMLDivElement | null;
+  if (!tagsList) return;
+
+  const canManageTags = checkCanCreateTag(currentRole);
+  tagsList.textContent = '';
+
+  tags.forEach(tag => {
+    const badge = document.createElement('span');
+    badge.className = 'status-badge';
+    badge.style.backgroundColor = getTagColor(tag.nome);
+    badge.style.color = '#ffffff';
+    badge.textContent = tag.nome;
+
+    if (canManageTags) {
+      badge.style.cursor = 'pointer';
+      badge.title = 'Clique para apagar esta tag';
+      badge.addEventListener('click', async () => {
+        await deleteTag(tag.id);
+      });
+    }
+
+    tagsList.appendChild(badge);
+  });
+
   populateTaskTagsDropdown();
 }
 
-function populateTaskTagsDropdown(): void {
-  const select = document.getElementById('taskTagsSelect') as HTMLSelectElement;
-  if (!select) return;
-  
-  // Remove all options except the first one
-  while (select.options.length > 1) {
-    select.remove(1);
+async function createTagFromInput(): Promise<void> {
+  if (!checkCanCreateTag(currentRole)) {
+    return;
   }
-  
-  // Add all available tags
-  fakeTags.forEach(tag => {
-    const option = document.createElement('option');
-    option.value = tag.name;
-    option.textContent = tag.name;
-    select.appendChild(option);
-  });
-}
 
-function createTagFromInput(): void {
   const input = document.getElementById('newTagName') as HTMLInputElement | null;
   if (!input) return;
 
@@ -462,18 +478,22 @@ function createTagFromInput(): void {
     return;
   }
 
-  if (fakeTags.some(t => t.name.toLowerCase() === tagName.toLowerCase())) {
+  if (tags.some(t => t.nome.toLowerCase() === tagName.toLowerCase())) {
     alert('Esta tag ja existe');
     return;
   }
 
-  const colors = ['#ff6b6b', '#ff8787', '#4c6ef5', '#15aabf', '#ffd43b', '#a78bfa', '#ff922b', '#63e6be', '#ffb3ba', '#ff8fab'];
-  const color = colors[Math.floor(Math.random() * colors.length)];
-  const newId = Math.max(...fakeTags.map(t => t.id), 0) + 1;
+  const newId = Math.max(...tags.map(t => t.id), 0) + 1;
 
-  fakeTags.push({ id: newId, name: tagName, color });
+  try {
+    await apiCreateTag({ id: newId, nome: tagName, created_at: new Date().toISOString().split('T')[0] });
+    await loadTags();
+  } catch (error) {
+    console.error('erro ao criar tag na api:', error);
+    return;
+  }
+
   input.value = '';
-  renderTags();
 }
 
 // ============================================
@@ -488,15 +508,15 @@ function updateStats(): void {
   const completedTasksEl = document.getElementById('completedTasks') as HTMLElement;
   const pendingTasksEl = document.getElementById('pendingTasks') as HTMLElement;
 
-  totalUsersEl.textContent = fakeUsers.length.toString();
-  const activeUsers = fakeUsers.filter(u => u.status === 'active').length;
+  totalUsersEl.textContent = users.length.toString();
+  const activeUsers = users.filter(u => u.active).length;
   activeUsersEl.textContent = activeUsers.toString();
-  percentageEl.textContent = Math.round((activeUsers / fakeUsers.length) * 100) + '%';
+  percentageEl.textContent = users.length === 0 ? '0%' : Math.round((activeUsers / users.length) * 100) + '%';
   
-  totalTasksEl.textContent = fakeTasks.length.toString();
-  const completedTasks = fakeTasks.filter(t => t.status === 'completed').length;
+  totalTasksEl.textContent = tasks.length.toString();
+  const completedTasks = tasks.filter(t => t.concluida).length;
   completedTasksEl.textContent = completedTasks.toString();
-  pendingTasksEl.textContent = fakeTasks.filter(t => t.status === 'pending').length.toString();
+  pendingTasksEl.textContent = tasks.filter(t => !t.concluida).length.toString();
 }
 
 // ============================================
@@ -513,7 +533,7 @@ function updateRoleUI(): void {
     member: [],
     viewer: []
   };
-  
+
   const allowedButtons = permissions[currentRole] || [];
   
   ['createUserBtn', 'createTaskBtn', 'createTagBtn'].forEach(id => {
@@ -522,25 +542,34 @@ function updateRoleUI(): void {
       btn.style.display = allowedButtons.includes(id) ? 'block' : 'none';
     }
   });
+
+  const tagInput = document.getElementById('newTagName') as HTMLInputElement | null;
+  if (tagInput) {
+    const canCreate = checkCanCreateTag(currentRole);
+    tagInput.disabled = !canCreate;
+    tagInput.placeholder = canCreate ? 'Nova tag' : 'Sem permissao para criar tag';
+    tagInput.classList.toggle('opacity-60', !canCreate);
+    tagInput.classList.toggle('cursor-not-allowed', !canCreate);
+  }
 }
 
 window.setRole = function(role: string): void {
   currentRole = role;
   updateRoleUI();
+  renderUsers();
+  renderTasks();
 };
 
 // ============================================
 // INITIALIZATION
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setupUserControls();
   setupTaskControls();
-  renderUsers();
-  renderTasks();
-  renderTags();
-  updateStats();
   updateRoleUI();
+  await Promise.all([loadUsers(), loadTasks(), loadTags()]);
+  updateStats();
   
   // Create User Button
   const createUserBtn = document.getElementById('createUserBtn') as HTMLButtonElement;
@@ -557,25 +586,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Create Tag Button
   const createTagBtn = document.getElementById('createTagBtn') as HTMLButtonElement | null;
   if (createTagBtn) {
-    createTagBtn.addEventListener('click', () => {
-      createTagFromInput();
+    createTagBtn.addEventListener('click', async () => {
+      await createTagFromInput();
     });
   }
 
   const newTagInput = document.getElementById('newTagName') as HTMLInputElement | null;
   if (newTagInput) {
-    newTagInput.addEventListener('keydown', (event) => {
+    newTagInput.addEventListener('keydown', async (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
-        createTagFromInput();
+        await createTagFromInput();
       }
     });
   }
   
   // User Form Submit
   const userForm = document.getElementById('userForm') as HTMLFormElement;
-  userForm.addEventListener('submit', (e) => {
+  userForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (!checkCanEditData(currentRole)) {
+      closeUserModal();
+      return;
+    }
     
     const id = (document.getElementById('userId') as HTMLInputElement).value;
     const name = (document.getElementById('userName') as HTMLInputElement).value;
@@ -583,27 +617,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = (document.getElementById('userStatus') as HTMLSelectElement).value as 'active' | 'inactive';
     const createdAt = new Date().toISOString().split('T')[0];
     
-    if (id) {
-      // Edit existing user
-      const userIndex = fakeUsers.findIndex(u => u.id === parseInt(id));
-      if (userIndex !== -1) {
-        fakeUsers[userIndex] = { ...fakeUsers[userIndex], name, email, status };
+    try {
+      if (id) {
+        await editUser({ id: parseInt(id, 10), name, email, active: status === 'active', created_at: createdAt });
+      } else {
+        const newId = Math.max(...users.map(u => u.id), 0) + 1;
+        await createUser({ id: newId, name, email, active: status === 'active', created_at: createdAt });
       }
-    } else {
-      // Create new user
-      const newId = Math.max(...fakeUsers.map(u => u.id)) + 1;
-      fakeUsers.push({ id: newId, name, email, status, createdAt });
+    } catch (error) {
+      console.error('erro ao sincronizar user com a api:', error);
+      return;
     }
-    
-    renderUsers();
-    updateStats();
+
     closeUserModal();
   });
   
   // Task Form Submit
   const taskForm = document.getElementById('taskForm') as HTMLFormElement;
-  taskForm.addEventListener('submit', (e) => {
+  taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (!checkCanEditData(currentRole)) {
+      closeTaskModal();
+      return;
+    }
     
     const id = (document.getElementById('taskId') as HTMLInputElement).value;
     const title = (document.getElementById('taskTitle') as HTMLInputElement).value;
@@ -612,37 +649,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = (document.getElementById('taskStatus') as HTMLSelectElement).value as 'pending' | 'in-progress' | 'completed';
     const createdAt = new Date().toISOString().split('T')[0];
     
-    // Get selected tags from dropdown
-    const select = document.getElementById('taskTagsSelect') as HTMLSelectElement;
-    const tags = Array.from(select.selectedOptions).map(option => option.value);
-    
-    if (id) {
-      // Edit existing task
-      const taskIndex = fakeTasks.findIndex(t => t.id === parseInt(id));
-      if (taskIndex !== -1) {
-        fakeTasks[taskIndex] = { ...fakeTasks[taskIndex], title, category, responsible, status, tags };
+    try {
+      if (id) {
+        await editTask({ id: parseInt(id), titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+      } else {
+        const nextId = Math.max(...tasks.map(t => t.id), 0) + 1;
+        await createTask({ id: nextId, titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
       }
-    } else {
-      // Create new task
-      const newId = Math.max(...fakeTasks.map(t => t.id)) + 1;
-      fakeTasks.push({ id: newId, title, category, responsible, tags, status, createdAt });
+    } catch (error) {
+      console.error('erro ao sincronizar task com a api:', error);
+      return;
     }
-    
-    renderTasks();
-    updateStats();
+
     closeTaskModal();
   });
   
-  // Close modals when clicking outside
-  const userModal = document.getElementById('userModal') as HTMLDivElement;
-  userModal.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).id === 'userModal') closeUserModal();
-  });
-  
-  const taskModal = document.getElementById('taskModal') as HTMLDivElement;
-  taskModal.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).id === 'taskModal') closeTaskModal();
-  });
+  setupModalBackdropHandlers();
 
   window.openUserModal = openUserModal;
   window.closeUserModal = closeUserModal;

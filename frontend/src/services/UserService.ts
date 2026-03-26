@@ -17,7 +17,7 @@ export class UserService {
   private nextId: number = 9;
 
   // Get all users with optional filters
-  async getUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]> {
+  getUsers(search?: string, sort?: 'asc' | 'desc'): User[] {
     let filtered = [...this.users];
 
     if (search) {
@@ -33,26 +33,26 @@ export class UserService {
       filtered.sort((a, b) => b.name.localeCompare(a.name));
     }
 
-    return Promise.resolve(filtered);
+    return filtered;
   }
 
   // Get user statistics
-  async getUserStats(): Promise<UserStats> {
+  getUserStats(): UserStats {
     const total = this.users.length;
     const active = this.users.filter(u => u.active).length;
     const inactive = total - active;
     const percentage = Math.round((active / total) * 100);
 
-    return Promise.resolve({
+    return {
       total,
       active,
       inactive,
       percentage
-    });
+    };
   }
 
   // Create new user
-  async createUser(name: string, email: string): Promise<User> {
+  createUser(name: string, email: string): User {
     const newUser: User = {
       id: this.nextId++,
       name,
@@ -62,44 +62,43 @@ export class UserService {
     };
 
     this.users.push(newUser);
-    return Promise.resolve(newUser);
+    return newUser;
   }
 
   // Get specific user
-  async getUser(id: number): Promise<User> {
+  getUser(id: number): User {
     const user = this.users.find(u => u.id === id);
     if (!user) throw new Error('Utilizador não encontrado');
-    return Promise.resolve(user);
+    return user;
   }
 
   // Update user
-  async updateUser(id: number, name: string, email: string): Promise<User> {
+  updateUser(id: number, name: string, email: string): User {
     const user = this.users.find(u => u.id === id);
     if (!user) throw new Error('Utilizador não encontrado');
 
     user.name = name;
     user.email = email;
-    return Promise.resolve(user);
+    return user;
   }
 
   // Toggle user active status
-  async toggleUserStatus(id: number): Promise<User> {
+  toggleUserStatus(id: number): User {
     const user = this.users.find(u => u.id === id);
     if (!user) throw new Error('Utilizador não encontrado');
 
     user.active = !user.active;
-    return Promise.resolve(user);
+    return user;
   }
 
   // Delete user
-  async deleteUser(id: number): Promise<void> {
+  deleteUser(id: number): void {
     this.users = this.users.filter(u => u.id !== id);
-    return Promise.resolve();
   }
 
   // Get user tasks
-  async getUserTasks(id: number): Promise<any[]> {
+  getUserTasks(id: number): any[] {
     // Mock: return tasks assigned to this user
-    return Promise.resolve([]);
+    return [];
   }
 }

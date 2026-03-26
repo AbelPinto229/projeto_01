@@ -37,7 +37,7 @@ npm run build
 
 ```
 src/
-├── services/          # Serviços para chamadas à API
+├── services/          # Serviços locais em memória (sem API)
 ├── models/            # Tipos e interfaces de dados
 ├── ui/                # Componentes de renderização
 ├── security/          # Gestão de roles e permissões
@@ -46,26 +46,6 @@ src/
 ├── utils/             # Utilitários e helpers
 └── tasks/             # Funções relacionadas a tarefas
 ```
-
-## 🔗 Integração Backend
-
-O frontend comunica com a API do backend em `http://localhost:3000`
-
-### Endpoints Utilizados
-
-- **GET** `/users` - Lista utilizadores
-- **POST** `/users` - Cria utilizador
-- **PUT** `/users/:id` - Atualiza utilizador
-- **PATCH** `/users/:id` - Alterna status
-- **DELETE** `/users/:id` - Deleta utilizador
-- **GET** `/tasks` - Lista tarefas
-- **POST** `/tasks` - Cria tarefa
-- **PUT** `/tasks/:id` - Atualiza tarefa
-- **PATCH** `/tasks/:id` - Alterna status
-- **DELETE** `/tasks/:id` - Deleta tarefa
-- **POST** `/tasks/:id/comments` - Adiciona comentário
-- **PUT** `/tasks/:id/comments/:commentId` - Atualiza comentário
-- **DELETE** `/tasks/:id/comments/:commentId` - Deleta comentário
 
 ## 👥 Roles e Permissões
 
@@ -90,9 +70,9 @@ O frontend comunica com a API do backend em `http://localhost:3000`
 
 ## 📝 Notas
 
-- O backend deve estar rodando em `http://localhost:3000`
-- TypeScript é compilado automaticamente com Vite
-- Usa Tailwind CSS para estilos
+- Projeto frontend isolado: sem ligação a backend ou base de dados
+- Dados e operações são locais (em memória)
+- Estilos feitos com CSS tradicional em `styles.css`
 
 ## 👨‍💻 Desenvolvido por
 

@@ -15,7 +15,7 @@ export class CommentService {
         this.nextId = 9;
     }
     // Create comment
-    async createComment(taskId, userId, conteudo) {
+    createComment(taskId, userId, conteudo) {
         const newComment = {
             id: this.nextId++,
             task_id: taskId,
@@ -24,20 +24,19 @@ export class CommentService {
             dataCriacao: new Date().toISOString().split('T')[0]
         };
         this.comments.push(newComment);
-        return Promise.resolve(newComment);
+        return newComment;
     }
     // Update comment
-    async updateComment(taskId, commentId, conteudo) {
+    updateComment(taskId, commentId, conteudo) {
         const comment = this.comments.find(c => c.id === commentId && c.task_id === taskId);
         if (!comment)
             throw new Error('Comentário não encontrado');
         comment.conteudo = conteudo;
-        return Promise.resolve(comment);
+        return comment;
     }
     // Delete comment
-    async deleteComment(taskId, commentId) {
+    deleteComment(taskId, commentId) {
         this.comments = this.comments.filter(c => !(c.id === commentId && c.task_id === taskId));
-        return Promise.resolve();
     }
 }
 //# sourceMappingURL=CommentService.js.map

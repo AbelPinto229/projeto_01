@@ -14,27 +14,26 @@ export class TagService {
         this.nextId = 8;
     }
     // Get all tags
-    async getTags() {
-        return Promise.resolve([...this.tags]);
+    getTags() {
+        return [...this.tags];
     }
     // Create tag
-    async createTag(nome) {
+    createTag(nome) {
         const newTag = {
             id: this.nextId++,
             nome,
             created_at: new Date().toISOString().split('T')[0]
         };
         this.tags.push(newTag);
-        return Promise.resolve(newTag);
+        return newTag;
     }
     // Get tag tasks (mock)
-    async getTagTasks(id) {
-        return Promise.resolve([]);
+    getTagTasks(id) {
+        return [];
     }
     // Delete tag
-    async deleteTag(id) {
+    deleteTag(id) {
         this.tags = this.tags.filter(t => t.id !== id);
-        return Promise.resolve();
     }
 }
 //# sourceMappingURL=TagService.js.map

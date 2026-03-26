@@ -29,6 +29,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["./**/*.ts", "./**/*.js"],
+  "include": ["./**/*.ts", "./**/*.js", "src/api/apiTaskService.ts"],
   "exclude": ["node_modules", "dist"]
 }

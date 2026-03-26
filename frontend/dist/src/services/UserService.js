@@ -15,7 +15,7 @@ export class UserService {
         this.nextId = 9;
     }
     // Get all users with optional filters
-    async getUsers(search, sort) {
+    getUsers(search, sort) {
         let filtered = [...this.users];
         if (search) {
             filtered = filtered.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -27,23 +27,23 @@ export class UserService {
         else if (sort === 'desc') {
             filtered.sort((a, b) => b.name.localeCompare(a.name));
         }
-        return Promise.resolve(filtered);
+        return filtered;
     }
     // Get user statistics
-    async getUserStats() {
+    getUserStats() {
         const total = this.users.length;
         const active = this.users.filter(u => u.active).length;
         const inactive = total - active;
         const percentage = Math.round((active / total) * 100);
-        return Promise.resolve({
+        return {
             total,
             active,
             inactive,
             percentage
-        });
+        };
     }
     // Create new user
-    async createUser(name, email) {
+    createUser(name, email) {
         const newUser = {
             id: this.nextId++,
             name,
@@ -52,41 +52,40 @@ export class UserService {
             created_at: new Date().toISOString().split('T')[0]
         };
         this.users.push(newUser);
-        return Promise.resolve(newUser);
+        return newUser;
     }
     // Get specific user
-    async getUser(id) {
+    getUser(id) {
         const user = this.users.find(u => u.id === id);
         if (!user)
             throw new Error('Utilizador não encontrado');
-        return Promise.resolve(user);
+        return user;
     }
     // Update user
-    async updateUser(id, name, email) {
+    updateUser(id, name, email) {
         const user = this.users.find(u => u.id === id);
         if (!user)
             throw new Error('Utilizador não encontrado');
         user.name = name;
         user.email = email;
-        return Promise.resolve(user);
+        return user;
     }
     // Toggle user active status
-    async toggleUserStatus(id) {
+    toggleUserStatus(id) {
         const user = this.users.find(u => u.id === id);
         if (!user)
             throw new Error('Utilizador não encontrado');
         user.active = !user.active;
-        return Promise.resolve(user);
+        return user;
     }
     // Delete user
-    async deleteUser(id) {
+    deleteUser(id) {
         this.users = this.users.filter(u => u.id !== id);
-        return Promise.resolve();
     }
     // Get user tasks
-    async getUserTasks(id) {
+    getUserTasks(id) {
         // Mock: return tasks assigned to this user
-        return Promise.resolve([]);
+        return [];
     }
 }
 //# sourceMappingURL=UserService.js.map

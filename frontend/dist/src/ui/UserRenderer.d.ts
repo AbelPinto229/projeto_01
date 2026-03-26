@@ -2,7 +2,8 @@ import type { User } from '../models/User.js';
 export declare class UserRenderer {
     private userService;
     constructor();
-    renderUserRow(user: User): string;
-    renderUsersList(container: HTMLElement): Promise<void>;
+    private createActionButton;
+    renderUserRow(user: User): HTMLTableRowElement;
+    renderUsersList(container: HTMLElement): void;
 }
 //# sourceMappingURL=UserRenderer.d.ts.map

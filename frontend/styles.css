@@ -1,0 +1,367 @@
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --text: #17223b;
+  --muted: #5f6b84;
+  --border: #d9dfec;
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --shadow: 0 10px 30px rgba(23, 34, 59, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 55%, #f7f2ea 100%);
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  padding: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.role-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.role-label {
+  padding: 8px 14px;
+  background: #e8eefb;
+  border-radius: 12px;
+  color: #334155;
+}
+
+.btn,
+.role-btn,
+.task-filter-btn,
+.user-filter-btn,
+.action-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary,
+.action-btn,
+.task-filter-btn.active,
+.user-filter-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover,
+.action-btn:hover,
+.task-filter-btn.active:hover,
+.user-filter-btn.active:hover {
+  background: var(--primary-hover);
+}
+
+.btn-neutral {
+  background: #475569;
+  color: #fff;
+}
+
+.btn-neutral:hover {
+  background: #334155;
+}
+
+.role-admin {
+  background: #0f172a;
+  color: #fff;
+}
+
+.role-manager {
+  background: #0e7490;
+  color: #fff;
+}
+
+.role-member {
+  background: #059669;
+  color: #fff;
+}
+
+.role-viewer {
+  background: #e11d48;
+  color: #fff;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  padding: 18px;
+}
+
+.stat-title {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.stat-value {
+  margin: 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.tags-tools {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.input,
+.select {
+  width: 100%;
+  border: 1px solid #b8c2d8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.input:focus,
+.select:focus {
+  outline: 2px solid #93c5fd;
+  border-color: #3b82f6;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.9rem;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.task-filter-btn,
+.user-filter-btn {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.task-filter-btn[data-status='pending'] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.task-filter-btn[data-status='in-progress'] {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.task-filter-btn[data-status='completed'] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.user-filter-btn[data-status='active'] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.user-filter-btn[data-status='inactive'] {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #475569;
+  background: #edf2fb;
+  padding: 12px 14px;
+}
+
+.table td {
+  padding: 12px 14px;
+  border-top: 1px solid #edf2fb;
+}
+
+.table-row:hover {
+  background: #f8fafc;
+}
+
+.status-badge,
+.tag-pill {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  display: inline-block;
+}
+
+.status-active,
+.status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.status-progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pending {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.tag-pill {
+  background: #dbeafe;
+  color: #1e40af;
+  margin-right: 6px;
+}
+
+.empty-row {
+  text-align: center;
+  color: #64748b;
+  padding: 28px;
+}
+
+.no-permission {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.modal-hidden {
+  display: none;
+}
+
+.modal-visible {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 16px;
+  z-index: 40;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 700px;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.modal-title {
+  margin: 0 0 12px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.form-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 960px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
