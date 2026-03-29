@@ -12,7 +12,7 @@ export function openUserModal(options) {
             document.getElementById('userId').value = String(user.id);
             document.getElementById('userName').value = user.name;
             document.getElementById('userEmail').value = user.email;
-            document.getElementById('userStatus').value = user.status;
+            document.getElementById('userStatus').value = user.active ? 'active' : 'inactive';
         }
     }
     else {
@@ -41,12 +41,12 @@ export function openTaskModal(options) {
         if (task) {
             titleEl.textContent = 'Editar Tarefa';
             document.getElementById('taskId').value = String(task.id);
-            document.getElementById('taskTitle').value = task.title;
-            document.getElementById('taskCategory').value = task.category;
-            document.getElementById('taskResponsible').value = task.responsible;
-            document.getElementById('taskStatus').value = task.status;
+            document.getElementById('taskTitle').value = task.titulo;
+            document.getElementById('taskCategory').value = task.categoria;
+            document.getElementById('taskResponsible').value = task.responsavelNome;
+            document.getElementById('taskStatus').value = task.concluida ? 'completed' : 'pending';
             Array.from(select.options).forEach(option => {
-                option.selected = task.tags.includes(option.value);
+                option.selected = false;
             });
         }
     }

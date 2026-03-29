@@ -3,49 +3,25 @@ import type { Task } from '../models/Task.js';
 
 const BASE_URL = 'http://localhost:3000';
 
-// GET /tags
+// vai buscar todas as tags
 export async function getTags(): Promise<Tag[]> {
   const res = await fetch(`${BASE_URL}/tags`);
-
-  if (!res.ok) {
-    throw new Error('Erro ao buscar tags');
-  }
-
-  const tags: Tag[] = [];
-  let apiResponse: unknown[] = [];
-  apiResponse = await res.json();
-
-  apiResponse.forEach((item) => {
-    tags.push(item as Tag);
-  });
-
-  return tags;
+  if (!res.ok) throw new Error('Erro ao buscar tags');
+  return res.json() as Promise<Tag[]>;
 }
 
-// POST /tags
+// cria uma nova tag
 export async function createTag(tag: Tag): Promise<Tag> {
   const res = await fetch(`${BASE_URL}/tags`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(tag)
   });
-
-  if (!res.ok) {
-    throw new Error('Erro ao criar tag');
-  }
-
-  let createdTag: Tag = {} as Tag;
-  let apiResponse: unknown = null;
-  apiResponse = await res.json();
-
-  createdTag = apiResponse as Tag;
-
-  return createdTag;
+  if (!res.ok) throw new Error('Erro ao criar tag');
+  return res.json() as Promise<Tag>;
 }
 
-// DELETE /tags/:id
+// apaga uma tag pelo id
 export async function deleteTag(id: number): Promise<void> {
   const res = await fetch(`${BASE_URL}/tags/${id}`, {
     method: 'DELETE'
@@ -56,21 +32,9 @@ export async function deleteTag(id: number): Promise<void> {
   }
 }
 
-// GET /tags/:id/tasks
+// vai buscar as tarefas associadas a uma tag
 export async function getTasksForTag(id: number): Promise<Task[]> {
   const res = await fetch(`${BASE_URL}/tags/${id}/tasks`);
-
-  if (!res.ok) {
-    throw new Error('Erro ao buscar tasks da tag');
-  }
-
-  const tasks: Task[] = [];
-  let apiResponse: unknown[] = [];
-  apiResponse = await res.json();
-
-  apiResponse.forEach((item) => {
-    tasks.push(item as Task);
-  });
-
-  return tasks;
+  if (!res.ok) throw new Error('Erro ao buscar tasks da tag');
+  return res.json() as Promise<Task[]>;
 }

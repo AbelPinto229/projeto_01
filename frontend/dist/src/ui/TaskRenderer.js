@@ -67,9 +67,9 @@ export class TaskRenderer {
         row.appendChild(actionsCell);
         return row;
     }
-    renderTasksList(container) {
+    async renderTasksList(container) {
         try {
-            const tasks = this.taskService.getTasks();
+            const tasks = await this.taskService.getTasks();
             const tbody = container.querySelector('tbody');
             if (tbody) {
                 tbody.textContent = '';

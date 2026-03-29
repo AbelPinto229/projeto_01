@@ -85,9 +85,9 @@ export class TaskRenderer {
     return row;
   }
 
-  renderTasksList(container: HTMLElement): void {
+  async renderTasksList(container: HTMLElement): Promise<void> {
     try {
-      const tasks = this.taskService.getTasks();
+      const tasks = await this.taskService.getTasks();
       const tbody = container.querySelector('tbody');
       if (tbody) {
         tbody.textContent = '';

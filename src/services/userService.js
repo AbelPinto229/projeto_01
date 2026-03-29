@@ -46,22 +46,18 @@ export const createUser = async (data) => {
 // se não existir, lança erro
 // para cada campo, usa o valor fornecido ou mantém o valor atual usando nullish coalescing (??)
 // executa o UPDATE no banco e depois busca o usuário atualizado para retornar
-export const updateUser = async (id, data) => {
-  const [existing] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-  if (existing.length === 0) {
-    throw new Error("Usuário não encontrado");
-  }
-  const user = existing[0];
+export const updateUser = async (user, data) => {
+  
   await db.query(
     'UPDATE users SET name = ?, email = ?, active = ? WHERE id = ?',
     [
       data.name ?? user.name,
       data.email ?? user.email,
       data.active ?? user.active,
-      id
+      user.id
     ]
   );
-  const [updated] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  const [updated] = await db.query('SELECT * FROM users WHERE id = ?', [user.id]);
   return updated[0];
 };
 

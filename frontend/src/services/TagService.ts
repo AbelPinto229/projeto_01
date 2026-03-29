@@ -1,44 +1,29 @@
 import type { Tag } from '../models/Tag.js';
-
-// FAKE DATA
-const fakeTags: Tag[] = [
-  { id: 1, nome: 'Urgente', created_at: '2024-01-10' },
-  { id: 2, nome: 'Bug', created_at: '2024-01-15' },
-  { id: 3, nome: 'Feature', created_at: '2024-01-20' },
-  { id: 4, nome: 'Melhoria', created_at: '2024-02-01' },
-  { id: 5, nome: 'Documentação', created_at: '2024-02-10' },
-  { id: 6, nome: 'Em Revisão', created_at: '2024-02-15' },
-  { id: 7, nome: 'Bloqueado', created_at: '2024-03-01' }
-];
+import { getTags as apiGetTags, createTag as apiCreateTag, deleteTag as apiDeleteTag } from '../api/apiTagService.js';
 
 export class TagService {
-  private tags: Tag[] = [...fakeTags];
-  private nextId: number = 8;
+  private tags: Tag[] = [];
 
-  // Get all tags
-  getTags(): Tag[] {
+  // carrega as tags da api
+  async loadTags(): Promise<Tag[]> {
+    return this.getTags();
+  }
+
+  // devolve todas as tags
+  async getTags(): Promise<Tag[]> {
+    this.tags = await apiGetTags();
     return [...this.tags];
   }
 
-  // Create tag
-  createTag(nome: string): Tag {
-    const newTag: Tag = {
-      id: this.nextId++,
-      nome,
-      created_at: new Date().toISOString().split('T')[0]
-    };
-
-    this.tags.push(newTag);
-    return newTag;
+  // cria uma nova tag
+  async createTag(tag: Tag): Promise<void> {
+    await apiCreateTag(tag);
+    await this.loadTags();
   }
 
-  // Get tag tasks (mock)
-  getTagTasks(id: number): any[] {
-    return [];
-  }
-
-  // Delete tag
-  deleteTag(id: number): void {
-    this.tags = this.tags.filter(t => t.id !== id);
+  // apaga uma tag
+  async deleteTag(id: number): Promise<void> {
+    await apiDeleteTag(id);
+    await this.loadTags();
   }
 }

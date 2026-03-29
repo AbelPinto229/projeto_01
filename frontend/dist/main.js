@@ -5,16 +5,11 @@ import { UserService } from './src/services/UserService.js';
 import { TaskService } from './src/services/TaskService.js';
 import { CommentService } from './src/services/CommentService.js';
 import { TagService } from './src/services/TagService.js';
-import { getTasks as apiGetTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask } from './src/api/apiTaskService.js';
-import { getUsers as apiGetUsers, createUser as apiCreateUser, updateUser as apiUpdateUser, deleteUser as apiDeleteUser } from './src/api/apiUserService.js';
-import { getTags as apiGetTags, createTag as apiCreateTag, deleteTag as apiDeleteTag } from './src/api/apiTagService.js';
 import { UserRenderer } from './src/ui/UserRenderer.js';
 import { TaskRenderer } from './src/ui/TaskRenderer.js';
-import { renderUsers as renderUsersUI, renderTasks as renderTasksUI, renderTags as renderTagsUI, updateUserFilterButtonsUI, updateTaskFilterButtonsUI } from './src/ui/AppRenderers.js';
 import { openUserModal as openUserModalUI, closeUserModal as closeUserModalUI, openTaskModal as openTaskModalUI, closeTaskModal as closeTaskModalUI, setupModalBackdropHandlers } from './src/ui/ModalManager.js';
 import { roleManager } from './src/security/RoleManager.js';
 import { systemLogger } from './src/logs/SystemLogger.js';
-import { toUiTask, toApiTask, toUiUser, toApiUser, toUiTag, toApiTag, getTagColor } from './src/utils/mappers.js';
 import { canEditData as checkCanEditData, canCreateTag as checkCanCreateTag } from './src/security/permissions.js';
 // ============================================
 // STATE VARIABLES
@@ -23,88 +18,66 @@ let currentRole = 'admin';
 let currentUserFilter = 'all';
 let currentTaskFilter = 'all';
 let taskSearchTerm = '';
+// ============================================
+// API
+// ============================================
 // array local para manter o estado das tasks no frontend
 let tasks = [];
 // array local para manter o estado dos users no frontend
 let users = [];
 // array local para manter o estado das tags no frontend
 let tags = [];
+// users
 // vai buscar users da api e atualiza o array local
 async function loadUsers() {
-    try {
-        const apiUsers = await apiGetUsers();
-        users = apiUsers.map(toUiUser);
-    }
-    catch (error) {
-        console.error('erro ao carregar users:', error);
-        users = [];
-    }
+    users = await userService.getUsers();
     renderUsers();
-    updateStats();
 }
 // cria user na api e depois sincroniza o array local
-async function createUserRecord(user) {
-    await apiCreateUser(toApiUser(user));
+async function createUser(user) {
+    await userService.createUser(user);
     await loadUsers();
 }
 // edita user na api e depois sincroniza o array local
-async function editUserRecord(user) {
-    await apiUpdateUser(user.id, toApiUser(user));
+async function editUser(user) {
+    await userService.updateUser(user);
     await loadUsers();
 }
 // apaga user na api e depois sincroniza o array local
-async function deleteUserRecord(id) {
-    await apiDeleteUser(id);
+async function deleteUser(id) {
+    await userService.deleteUser(id);
     await loadUsers();
 }
+//tags
 // vai buscar tags da api e atualiza o array local
 async function loadTags() {
-    try {
-        const apiTags = await apiGetTags();
-        tags = apiTags.map(toUiTag);
-    }
-    catch (error) {
-        console.error('erro ao carregar tags:', error);
-        tags = [];
-    }
+    tags = await tagService.getTags();
     renderTags();
 }
-// cria tag na api e depois sincroniza o array local
-async function createTagRecord(tag) {
-    await apiCreateTag(toApiTag(tag));
-    await loadTags();
-}
 // apaga tag na api e depois sincroniza o array local
-async function deleteTagRecord(id) {
-    await apiDeleteTag(id);
+async function deleteTag(id) {
+    await tagService.deleteTag(id);
     await loadTags();
 }
-// vai buscar da api e atualiza o array local
+//tasks
+// vai buscar da api e atualiza e renderiza o array local 
 async function loadTasks() {
-    try {
-        const apiTasks = await apiGetTasks();
-        tasks = apiTasks.map(toUiTask);
-    }
-    catch (error) {
-        console.error('erro ao carregar tasks:', error);
-        tasks = [];
-    }
+    tasks = await taskService.loadTasks();
     renderTasks();
-    updateStats();
 }
 // cria task na api e depois sincroniza o array local
 async function createTask(task) {
-    await apiCreateTask(toApiTask(task));
+    await taskService.createTask(task);
     await loadTasks();
 }
 // edita task na api e depois sincroniza o array local
 async function editTask(task) {
-    await apiUpdateTask(task.id, toApiTask(task));
+    await taskService.updateTask(task);
     await loadTasks();
 }
 // apaga task na api e depois sincroniza o array local
 async function deleteTask(id) {
-    await apiDeleteTask(id);
+    await taskService.deleteTask(id);
     await loadTasks();
 }
 // ============================================
@@ -151,13 +124,108 @@ function closeTaskModal() {
 // ============================================
 // RENDER FUNCTIONS
 // ============================================
-function renderUsers() {
-    renderUsersUI({
-        users,
-        currentUserFilter,
-        canEditData: checkCanEditData(currentRole),
-        onEditUser: openUserModal
+function getTagColor(name) {
+    const palette = ['#ff6b6b', '#ff8787', '#4c6ef5', '#15aabf', '#ffd43b', '#a78bfa', '#ff922b', '#63e6be', '#ffb3ba', '#ff8fab'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i += 1) {
+        hash = (hash << 5) - hash + name.charCodeAt(i);
+        hash |= 0;
+    }
+    return palette[Math.abs(hash) % palette.length];
+}
+function updateUserFilterButtonsUI(filter) {
+    document.querySelectorAll('.user-filter-btn').forEach(button => {
+        const element = button;
+        const status = element.getAttribute('data-status');
+        element.classList.toggle('active', status === filter);
     });
+}
+function updateTaskFilterButtonsUI(filter) {
+    document.querySelectorAll('.task-filter-btn').forEach(button => {
+        const element = button;
+        const status = element.getAttribute('data-status');
+        element.classList.toggle('active', status === filter);
+    });
+}
+function populateTaskTagsDropdown() {
+    const select = document.getElementById('taskTagsSelect');
+    if (!select)
+        return;
+    while (select.options.length > 1) {
+        select.remove(1);
+    }
+    tags.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag.nome;
+        option.textContent = tag.nome;
+        select.appendChild(option);
+    });
+}
+function renderUsers() {
+    const tbody = document.querySelector('#userTable tbody');
+    if (!tbody)
+        return;
+    const filteredUsers = users.filter(user => {
+        if (currentUserFilter === 'active')
+            return user.active;
+        if (currentUserFilter === 'inactive')
+            return !user.active;
+        return true;
+    });
+    tbody.textContent = '';
+    if (filteredUsers.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 5;
+        cell.className = 'empty-row';
+        cell.textContent = 'Nenhum utilizador encontrado para o filtro atual.';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+    filteredUsers.forEach(user => {
+        const row = document.createElement('tr');
+        row.className = 'table-row';
+        const nameCell = document.createElement('td');
+        nameCell.textContent = user.name;
+        const emailCell = document.createElement('td');
+        emailCell.textContent = user.email;
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = `status-badge ${user.active ? 'status-active' : 'status-inactive'}`;
+        statusBadge.textContent = user.active ? 'Ativo' : 'Inativo';
+        statusCell.appendChild(statusBadge);
+        const createdAtCell = document.createElement('td');
+        createdAtCell.textContent = user.created_at;
+        const actionCell = document.createElement('td');
+        if (checkCanEditData(currentRole)) {
+            const editButton = document.createElement('button');
+            editButton.className = 'action-btn';
+            editButton.textContent = 'Editar';
+            editButton.addEventListener('click', () => openUserModal(user.id));
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'action-btn';
+            deleteButton.textContent = 'Apagar';
+            deleteButton.addEventListener('click', async () => {
+                await deleteUser(user.id);
+            });
+            actionCell.appendChild(editButton);
+            actionCell.appendChild(deleteButton);
+        }
+        else {
+            const noPermission = document.createElement('span');
+            noPermission.className = 'no-permission';
+            noPermission.textContent = 'Sem permissao';
+            actionCell.appendChild(noPermission);
+        }
+        row.appendChild(nameCell);
+        row.appendChild(emailCell);
+        row.appendChild(statusCell);
+        row.appendChild(createdAtCell);
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+    });
+    updateStats();
 }
 function setupUserControls() {
     document.querySelectorAll('.user-filter-btn').forEach(button => {
@@ -174,13 +242,79 @@ function setupUserControls() {
     updateUserFilterButtonsUI(currentUserFilter);
 }
 function renderTasks() {
-    renderTasksUI({
-        tasks,
-        currentTaskFilter,
-        taskSearchTerm,
-        canEditData: checkCanEditData(currentRole),
-        onEditTask: openTaskModal
+    const tbody = document.querySelector('#taskTable tbody');
+    if (!tbody)
+        return;
+    const term = taskSearchTerm.trim().toLowerCase();
+    const filteredTasks = tasks.filter(task => {
+        if (currentTaskFilter === 'completed' && !task.concluida)
+            return false;
+        if (currentTaskFilter === 'pending' && task.concluida)
+            return false;
+        if (!term)
+            return true;
+        const searchable = `${task.titulo} ${task.categoria} ${task.responsavelNome}`.toLowerCase();
+        return searchable.includes(term);
     });
+    tbody.textContent = '';
+    if (filteredTasks.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 7;
+        cell.className = 'empty-row';
+        cell.textContent = 'Nenhuma tarefa encontrada para o filtro atual.';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+    filteredTasks.forEach(task => {
+        const row = document.createElement('tr');
+        row.className = 'table-row';
+        const titleCell = document.createElement('td');
+        titleCell.textContent = task.titulo;
+        const categoryCell = document.createElement('td');
+        categoryCell.textContent = task.categoria;
+        const responsibleCell = document.createElement('td');
+        responsibleCell.textContent = task.responsavelNome;
+        const tagsCell = document.createElement('td');
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = `status-badge ${task.concluida ? 'status-completed' : 'status-pending'}`;
+        statusBadge.textContent = task.concluida ? 'Concluido' : 'Pendente';
+        statusCell.appendChild(statusBadge);
+        const createdAtCell = document.createElement('td');
+        createdAtCell.textContent = task.created_at;
+        const actionCell = document.createElement('td');
+        if (checkCanEditData(currentRole)) {
+            const editButton = document.createElement('button');
+            editButton.className = 'action-btn';
+            editButton.textContent = 'Editar';
+            editButton.addEventListener('click', () => openTaskModal(task.id));
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'action-btn';
+            deleteButton.textContent = 'Apagar';
+            deleteButton.addEventListener('click', async () => {
+                await deleteTask(task.id);
+            });
+            actionCell.appendChild(editButton);
+            actionCell.appendChild(deleteButton);
+        }
+        else {
+            const noPermission = document.createElement('span');
+            noPermission.className = 'no-permission';
+            noPermission.textContent = 'Sem permissao';
+            actionCell.appendChild(noPermission);
+        }
+        row.appendChild(titleCell);
+        row.appendChild(categoryCell);
+        row.appendChild(responsibleCell);
+        row.appendChild(tagsCell);
+        row.appendChild(statusCell);
+        row.appendChild(createdAtCell);
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+    });
+    updateStats();
 }
 function setupTaskControls() {
     const searchInput = document.getElementById('taskSearchInput');
@@ -204,7 +338,27 @@ function setupTaskControls() {
     updateTaskFilterButtonsUI(currentTaskFilter);
 }
 function renderTags() {
-    renderTagsUI(tags);
+    const tagsList = document.getElementById('tagsList');
+    if (!tagsList)
+        return;
+    const canManageTags = checkCanCreateTag(currentRole);
+    tagsList.textContent = '';
+    tags.forEach(tag => {
+        const badge = document.createElement('span');
+        badge.className = 'status-badge';
+        badge.style.backgroundColor = getTagColor(tag.nome);
+        badge.style.color = '#ffffff';
+        badge.textContent = tag.nome;
+        if (canManageTags) {
+            badge.style.cursor = 'pointer';
+            badge.title = 'Clique para apagar esta tag';
+            badge.addEventListener('click', async () => {
+                await deleteTag(tag.id);
+            });
+        }
+        tagsList.appendChild(badge);
+    });
+    populateTaskTagsDropdown();
 }
 async function createTagFromInput() {
     if (!checkCanCreateTag(currentRole)) {
@@ -218,14 +372,14 @@ async function createTagFromInput() {
         alert('Por favor, digite um nome para a tag');
         return;
     }
-    if (tags.some(t => t.name.toLowerCase() === tagName.toLowerCase())) {
+    if (tags.some(t => t.nome.toLowerCase() === tagName.toLowerCase())) {
         alert('Esta tag ja existe');
         return;
     }
     const newId = Math.max(...tags.map(t => t.id), 0) + 1;
-    const color = getTagColor(tagName);
     try {
-        await createTagRecord({ id: newId, name: tagName, color });
+        await tagService.createTag({ id: newId, nome: tagName, created_at: new Date().toISOString().split('T')[0] });
+        await loadTags();
     }
     catch (error) {
         console.error('erro ao criar tag na api:', error);
@@ -244,13 +398,13 @@ function updateStats() {
     const completedTasksEl = document.getElementById('completedTasks');
     const pendingTasksEl = document.getElementById('pendingTasks');
     totalUsersEl.textContent = users.length.toString();
-    const activeUsers = users.filter(u => u.status === 'active').length;
+    const activeUsers = users.filter(u => u.active).length;
     activeUsersEl.textContent = activeUsers.toString();
     percentageEl.textContent = users.length === 0 ? '0%' : Math.round((activeUsers / users.length) * 100) + '%';
     totalTasksEl.textContent = tasks.length.toString();
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const completedTasks = tasks.filter(t => t.concluida).length;
     completedTasksEl.textContent = completedTasks.toString();
-    pendingTasksEl.textContent = tasks.filter(t => t.status === 'pending').length.toString();
+    pendingTasksEl.textContent = tasks.filter(t => !t.concluida).length.toString();
 }
 // ============================================
 // ROLE MANAGEMENT
@@ -294,6 +448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTaskControls();
     updateRoleUI();
     await Promise.all([loadUsers(), loadTasks(), loadTags()]);
+    updateStats();
     // Create User Button
     const createUserBtn = document.getElementById('createUserBtn');
     createUserBtn.addEventListener('click', () => {
@@ -335,11 +490,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const createdAt = new Date().toISOString().split('T')[0];
         try {
             if (id) {
-                await editUserRecord({ id: parseInt(id, 10), name, email, status, createdAt });
+                await editUser({ id: parseInt(id, 10), name, email, active: status === 'active', created_at: createdAt });
             }
             else {
                 const newId = Math.max(...users.map(u => u.id), 0) + 1;
-                await createUserRecord({ id: newId, name, email, status, createdAt });
+                await createUser({ id: newId, name, email, active: status === 'active', created_at: createdAt });
             }
         }
         catch (error) {
@@ -362,16 +517,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const responsible = document.getElementById('taskResponsible').value;
         const status = document.getElementById('taskStatus').value;
         const createdAt = new Date().toISOString().split('T')[0];
-        // Get selected tags from dropdown
-        const select = document.getElementById('taskTagsSelect');
-        const tags = Array.from(select.selectedOptions).map(option => option.value);
         try {
             if (id) {
-                await editTask({ id: parseInt(id), title, category, responsible, tags, status, createdAt });
+                await editTask({ id: parseInt(id), titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
             }
             else {
                 const nextId = Math.max(...tasks.map(t => t.id), 0) + 1;
-                await createTask({ id: nextId, title, category, responsible, tags, status, createdAt });
+                await createTask({ id: nextId, titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
             }
         }
         catch (error) {

@@ -6,7 +6,7 @@ import * as userService from "../services/userService.js";
 export const getUsers = async (req, res) => {
   try {
     
-    const users = await userService.getUsers(req.query);
+    const users = await userService.getUsers(req.user);
     
     res.json(users);
   } catch (error) {

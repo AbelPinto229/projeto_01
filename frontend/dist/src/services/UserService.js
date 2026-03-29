@@ -1,21 +1,15 @@
-// FAKE DATA
-const fakeUsers = [
-    { id: 1, name: 'João Silva', email: 'joao@example.com', active: true, created_at: '2024-01-15' },
-    { id: 2, name: 'Maria Santos', email: 'maria@example.com', active: true, created_at: '2024-01-20' },
-    { id: 3, name: 'Pedro Oliveira', email: 'pedro@example.com', active: false, created_at: '2024-02-01' },
-    { id: 4, name: 'Ana Costa', email: 'ana@example.com', active: true, created_at: '2024-02-10' },
-    { id: 5, name: 'Carlos Mendes', email: 'carlos@example.com', active: true, created_at: '2024-02-15' },
-    { id: 6, name: 'Sofia Pereira', email: 'sofia@example.com', active: false, created_at: '2024-03-01' },
-    { id: 7, name: 'Miguel Ferreira', email: 'miguel@example.com', active: true, created_at: '2024-03-05' },
-    { id: 8, name: 'Beatriz Gomes', email: 'beatriz@example.com', active: true, created_at: '2024-03-10' }
-];
+import { getUsers as apiGetUsers, createUser as apiCreateUser, updateUser as apiUpdateUser, toggleUserStatus as apiToggleUserStatus, deleteUser as apiDeleteUser } from '../api/apiUserService.js';
 export class UserService {
     constructor() {
-        this.users = [...fakeUsers];
-        this.nextId = 9;
+        this.users = [];
     }
-    // Get all users with optional filters
-    getUsers(search, sort) {
+    // carrega os utilizadores da api
+    async loadUsers(search, sort) {
+        return this.getUsers(search, sort);
+    }
+    // devolve todos os utilizadores com filtros opcionais
+    async getUsers(search, sort) {
+        this.users = await apiGetUsers();
         let filtered = [...this.users];
         if (search) {
             filtered = filtered.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -29,12 +23,12 @@ export class UserService {
         }
         return filtered;
     }
-    // Get user statistics
+    // devolve estatísticas dos utilizadores
     getUserStats() {
         const total = this.users.length;
         const active = this.users.filter(u => u.active).length;
         const inactive = total - active;
-        const percentage = Math.round((active / total) * 100);
+        const percentage = total === 0 ? 0 : Math.round((active / total) * 100);
         return {
             total,
             active,
@@ -42,50 +36,32 @@ export class UserService {
             percentage
         };
     }
-    // Create new user
-    createUser(name, email) {
-        const newUser = {
-            id: this.nextId++,
-            name,
-            email,
-            active: true,
-            created_at: new Date().toISOString().split('T')[0]
-        };
-        this.users.push(newUser);
-        return newUser;
+    // cria um novo utilizador
+    async createUser(user) {
+        await apiCreateUser(user);
+        await this.loadUsers();
     }
-    // Get specific user
+    // devolve um utilizador específico
     getUser(id) {
         const user = this.users.find(u => u.id === id);
         if (!user)
             throw new Error('Utilizador não encontrado');
         return user;
     }
-    // Update user
-    updateUser(id, name, email) {
-        const user = this.users.find(u => u.id === id);
-        if (!user)
-            throw new Error('Utilizador não encontrado');
-        user.name = name;
-        user.email = email;
-        return user;
+    // atualiza um utilizador
+    async updateUser(user) {
+        await apiUpdateUser(user.id, user);
+        await this.loadUsers();
     }
-    // Toggle user active status
-    toggleUserStatus(id) {
-        const user = this.users.find(u => u.id === id);
-        if (!user)
-            throw new Error('Utilizador não encontrado');
-        user.active = !user.active;
-        return user;
+    // alterna o estado ativo do utilizador
+    async toggleUserStatus(id) {
+        await apiToggleUserStatus(id);
+        await this.loadUsers();
     }
-    // Delete user
-    deleteUser(id) {
-        this.users = this.users.filter(u => u.id !== id);
-    }
-    // Get user tasks
-    getUserTasks(id) {
-        // Mock: return tasks assigned to this user
-        return [];
+    // apaga um utilizador
+    async deleteUser(id) {
+        await apiDeleteUser(id);
+        await this.loadUsers();
     }
 }
 //# sourceMappingURL=UserService.js.map

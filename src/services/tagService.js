@@ -5,7 +5,7 @@ import { db } from '../db.js';
 // o resultado da query é desestruturado para pegar o array de tags (rows)
 // retorna esse array contendo todas as tags existentes
 export const getTags = async () => {
-  const [rows] = await db.query('SELECT * FROM tags');
+  const [rows] = await db.query('SELECT id, name AS nome, created_at FROM tags');
   return rows;
 };
 
@@ -15,24 +15,26 @@ export const getTags = async () => {
 // o resultado da query retorna o insertId, que é o id gerado automaticamente pelo banco
 // retorna um objeto com o id e o nome da tag criada
 export const createTag = async (data) => {
+  const nome = data.nome ?? data.name;
   const [result] = await db.query(
     'INSERT INTO tags (name) VALUES (?)',
-    [data.name]
+    [nome]
   );
-  return {
-    id: result.insertId,
-    name: data.name
-  };
+
+  const [created] = await db.query(
+    'SELECT id, name AS nome, created_at FROM tags WHERE id = ?',
+    [result.insertId]
+  );
+
+  return created[0];
 };
 
 // executa uma função assíncrona que deleta uma tag do sistema e todas as suas associações com tarefas
 // recebe o id da tag a ser deletada
-// primeiro remove todas as associações dessa tag na tabela task_tags para evitar erro de foreign key
-// depois deleta a própria tag da tabela tags
+// deleta a tag da tabela tags — o ON DELETE CASCADE trata automaticamente de apagar as associações em task_tags
 // verifica se alguma linha foi afetada (affectedRows) para saber se a tag existia
 // se não existia, lança erro; se deletou, retorna mensagem de sucesso
 export const deleteTag = async (id) => {
-  await db.query('DELETE FROM task_tags WHERE tag_id = ?', [id]);
   const [result] = await db.query('DELETE FROM tags WHERE id = ?', [id]);
   if (result.affectedRows === 0) {
     throw new Error("Tag não encontrada");
@@ -43,7 +45,7 @@ export const deleteTag = async (id) => {
 // executa uma função assíncrona que busca todas as tarefas associadas a uma tag específica
 // recebe o id da tag como parâmetro
 // faz um INNER JOIN entre as tabelas tasks e task_tags para encontrar as tarefas relacionadas à tag
-// filtra pelo tag_id na tabela de relacionamento (many-to-many)
+// filtra pelo tag_id na tabela de relacionamento 
 // retorna um array com todas as tarefas que possuem essa tag
 export const getTasksByTagId = async (tagId) => {
   const [rows] = await db.query(`

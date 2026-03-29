@@ -1,55 +1,34 @@
 const BASE_URL = 'http://localhost:3000';
-// GET /tasks
+// vai buscar todas as tarefas
 export async function getTasks() {
     const res = await fetch(`${BASE_URL}/tasks`);
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao buscar tasks');
-    }
-    const tasks = [];
-    let apiResponse = [];
-    apiResponse = await res.json();
-    apiResponse.forEach((item) => {
-        tasks.push(item);
-    });
-    return tasks;
+    return res.json();
 }
-// PUT /tasks/:id
+// atualiza uma tarefa pelo id
 export async function updateTask(id, task) {
     const res = await fetch(`${BASE_URL}/tasks/${id}`, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
     });
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao atualizar task');
-    }
-    let updatedTask = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    updatedTask = apiResponse;
-    return updatedTask;
+    return res.json();
 }
-// POST /tasks
+// cria uma nova tarefa
 export async function createTask(task) {
     const res = await fetch(`${BASE_URL}/tasks`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
     });
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao criar task');
-    }
-    let createdTask = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    createdTask = apiResponse;
-    return createdTask;
+    return res.json();
 }
-// DELETE /tasks/:id
+// apaga uma tarefa pelo id
 export async function deleteTask(id) {
     const res = await fetch(`${BASE_URL}/tasks/${id}`, {
         method: 'DELETE'
@@ -58,32 +37,21 @@ export async function deleteTask(id) {
         throw new Error('Erro ao apagar task');
     }
 }
-// GET /tasks/stats
+// vai buscar estatísticas das tarefas
 export async function getTaskStats() {
     const res = await fetch(`${BASE_URL}/tasks/stats`);
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao buscar estatisticas de tasks');
-    }
-    let stats = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    stats = apiResponse;
-    return stats;
+    return res.json();
 }
-// POST /tasks/:id/tags
+// adiciona uma tag a uma tarefa
 export async function addTagToTask(taskId, tagId) {
     const res = await fetch(`${BASE_URL}/tasks/${taskId}/tags`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tagId })
     });
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao adicionar tag na task');
-    }
-    let apiResponse = null;
-    apiResponse = await res.json();
-    return apiResponse;
 }
 //# sourceMappingURL=apiTaskService.js.map

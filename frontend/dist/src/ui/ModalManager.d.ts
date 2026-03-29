@@ -1,4 +1,5 @@
-import type { Task, User } from './AppUiTypes.js';
+import type { Task } from '../models/Task.js';
+import type { User } from '../models/User.js';
 interface OpenUserModalOptions {
     userId?: number;
     users: User[];

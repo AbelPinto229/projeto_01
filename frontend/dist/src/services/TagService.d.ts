@@ -1,10 +1,9 @@
 import type { Tag } from '../models/Tag.js';
 export declare class TagService {
     private tags;
-    private nextId;
-    getTags(): Tag[];
-    createTag(nome: string): Tag;
-    getTagTasks(id: number): any[];
-    deleteTag(id: number): void;
+    loadTags(): Promise<Tag[]>;
+    getTags(): Promise<Tag[]>;
+    createTag(tag: Tag): Promise<void>;
+    deleteTag(id: number): Promise<void>;
 }
 //# sourceMappingURL=TagService.d.ts.map

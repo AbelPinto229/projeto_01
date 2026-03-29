@@ -1,69 +1,41 @@
 const BASE_URL = 'http://localhost:3000';
-// GET /users
+// vai buscar todos os utilizadores
 export async function getUsers() {
     const res = await fetch(`${BASE_URL}/users`);
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao buscar users');
-    }
-    const users = [];
-    let apiResponse = [];
-    apiResponse = await res.json();
-    apiResponse.forEach((item) => {
-        users.push(item);
-    });
-    return users;
+    return res.json();
 }
-// POST /users
+// cria um novo utilizador
 export async function createUser(user) {
     const res = await fetch(`${BASE_URL}/users`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
     });
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao criar user');
-    }
-    let createdUser = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    createdUser = apiResponse;
-    return createdUser;
+    return res.json();
 }
-// PUT /users/:id
+// atualiza um utilizador pelo id
 export async function updateUser(id, user) {
     const res = await fetch(`${BASE_URL}/users/${id}`, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
     });
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao atualizar user');
-    }
-    let updatedUser = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    updatedUser = apiResponse;
-    return updatedUser;
+    return res.json();
 }
-// PATCH /users/:id
+// alterna o estado do utilizador
 export async function toggleUserStatus(id) {
-    const res = await fetch(`${BASE_URL}/users/${id}`, {
-        method: 'PATCH'
-    });
-    if (!res.ok) {
+    const res = await fetch(`${BASE_URL}/users/${id}`, { method: 'PATCH' });
+    if (!res.ok)
         throw new Error('Erro ao alternar status do user');
-    }
-    let updatedUser = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    updatedUser = apiResponse;
-    return updatedUser;
+    return res.json();
 }
-// DELETE /users/:id
+// apaga um utilizador pelo id
 export async function deleteUser(id) {
     const res = await fetch(`${BASE_URL}/users/${id}`, {
         method: 'DELETE'
@@ -72,30 +44,18 @@ export async function deleteUser(id) {
         throw new Error('Erro ao apagar user');
     }
 }
-// GET /users/stats
+// vai buscar estatísticas dos utilizadores
 export async function getUserStats() {
     const res = await fetch(`${BASE_URL}/users/stats`);
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao buscar estatisticas de users');
-    }
-    let stats = {};
-    let apiResponse = null;
-    apiResponse = await res.json();
-    stats = apiResponse;
-    return stats;
+    return res.json();
 }
-// GET /users/:id/tasks
+// vai buscar as tarefas de um utilizador
 export async function getUserTasks(id) {
     const res = await fetch(`${BASE_URL}/users/${id}/tasks`);
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error('Erro ao buscar tasks do user');
-    }
-    const tasks = [];
-    let apiResponse = [];
-    apiResponse = await res.json();
-    apiResponse.forEach((item) => {
-        tasks.push(item);
-    });
-    return tasks;
+    return res.json();
 }
 //# sourceMappingURL=apiUserService.js.map

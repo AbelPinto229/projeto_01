@@ -4,6 +4,6 @@ export declare class UserRenderer {
     constructor();
     private createActionButton;
     renderUserRow(user: User): HTMLTableRowElement;
-    renderUsersList(container: HTMLElement): void;
+    renderUsersList(container: HTMLElement): Promise<void>;
 }
 //# sourceMappingURL=UserRenderer.d.ts.map

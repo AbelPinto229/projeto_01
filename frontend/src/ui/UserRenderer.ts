@@ -50,9 +50,9 @@ export class UserRenderer {
     return row;
   }
 
-  renderUsersList(container: HTMLElement): void {
+  async renderUsersList(container: HTMLElement): Promise<void> {
     try {
-      const users = this.userService.getUsers();
+      const users = await this.userService.getUsers();
       const tbody = container.querySelector('tbody');
       if (tbody) {
         tbody.textContent = '';

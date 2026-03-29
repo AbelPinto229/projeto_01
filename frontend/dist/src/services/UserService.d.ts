@@ -1,14 +1,13 @@
 import type { User, UserStats } from '../models/User.js';
 export declare class UserService {
     private users;
-    private nextId;
-    getUsers(search?: string, sort?: 'asc' | 'desc'): User[];
+    loadUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]>;
+    getUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]>;
     getUserStats(): UserStats;
-    createUser(name: string, email: string): User;
+    createUser(user: User): Promise<void>;
     getUser(id: number): User;
-    updateUser(id: number, name: string, email: string): User;
-    toggleUserStatus(id: number): User;
-    deleteUser(id: number): void;
-    getUserTasks(id: number): any[];
+    updateUser(user: User): Promise<void>;
+    toggleUserStatus(id: number): Promise<void>;
+    deleteUser(id: number): Promise<void>;
 }
 //# sourceMappingURL=UserService.d.ts.map

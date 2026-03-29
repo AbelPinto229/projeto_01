@@ -5,6 +5,6 @@ export declare class TaskRenderer {
     private renderTags;
     private createActionButton;
     renderTaskRow(task: Task): HTMLTableRowElement;
-    renderTasksList(container: HTMLElement): void;
+    renderTasksList(container: HTMLElement): Promise<void>;
 }
 //# sourceMappingURL=TaskRenderer.d.ts.map

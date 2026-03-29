@@ -21,7 +21,7 @@ export const getTags = async (req, res) => {
  */
 export const createTag = async (req, res) => {
   try {
-    // req.body contém os dados da tag: { name: "urgente" }
+    // req.body contém os dados da tag: { nome: "urgente" }
     const tag = await tagService.createTag(req.body);
     
     res.status(201).json(tag);

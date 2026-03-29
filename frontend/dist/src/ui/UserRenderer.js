@@ -36,9 +36,9 @@ export class UserRenderer {
         row.appendChild(actionsCell);
         return row;
     }
-    renderUsersList(container) {
+    async renderUsersList(container) {
         try {
-            const users = this.userService.getUsers();
+            const users = await this.userService.getUsers();
             const tbody = container.querySelector('tbody');
             if (tbody) {
                 tbody.textContent = '';

@@ -6,9 +6,6 @@ import { UserService } from './src/services/UserService.js';
 import { TaskService } from './src/services/TaskService.js';
 import { CommentService } from './src/services/CommentService.js';
 import { TagService } from './src/services/TagService.js';
-import { getTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask } from './src/api/apiTaskService.js';
-import { getUsers as apiGetUsers, createUser as apiCreateUser, updateUser as apiUpdateUser, deleteUser as apiDeleteUser } from './src/api/apiUserService.js';
-import { getTags as apiGetTags, createTag as apiCreateTag, deleteTag as apiDeleteTag } from './src/api/apiTagService.js';
 import { UserRenderer } from './src/ui/UserRenderer.js';
 import { TaskRenderer } from './src/ui/TaskRenderer.js';
 import { openUserModal as openUserModalUI, closeUserModal as closeUserModalUI, openTaskModal as openTaskModalUI, closeTaskModal as closeTaskModalUI, setupModalBackdropHandlers } from './src/ui/ModalManager.js';
@@ -76,62 +73,62 @@ let tags: Tag[] = [];
 // users
 // vai buscar users da api e atualiza o array local
 async function loadUsers() {
-  users = await apiGetUsers();
+  users = await userService.getUsers();
   renderUsers();
 }
 
 // cria user na api e depois sincroniza o array local
 async function createUser(user: User) {
-  await apiCreateUser(user);
+  await userService.createUser(user);
   await loadUsers();
 }
 
 // edita user na api e depois sincroniza o array local
 async function editUser(user: User) {
-  await apiUpdateUser(user.id, user);
+  await userService.updateUser(user);
   await loadUsers();
 }
 
 // apaga user na api e depois sincroniza o array local
 async function deleteUser(id: number) {
-  await apiDeleteUser(id);
+  await userService.deleteUser(id);
   await loadUsers();
 }
 //tags
 // vai buscar tags da api e atualiza o array local
 async function loadTags() {
-  tags = await apiGetTags();
+  tags = await tagService.getTags();
   renderTags();
 }
 
 // apaga tag na api e depois sincroniza o array local
 async function deleteTag(id: number) {
-  await apiDeleteTag(id);
+  await tagService.deleteTag(id);
   await loadTags();
 }
 
 //tasks
 // vai buscar da api e atualiza e renderiza o array local 
 async function loadTasks() {
-  tasks = await getTasks();
+  tasks = await taskService.loadTasks();
   renderTasks();
 }
 
 // cria task na api e depois sincroniza o array local
 async function createTask(task: Task) {
-  await apiCreateTask(task);
+  await taskService.createTask(task);
   await loadTasks();
 }
 
 // edita task na api e depois sincroniza o array local
 async function editTask(task: Task) {
-  await apiUpdateTask(task.id, task);
+  await taskService.updateTask(task);
   await loadTasks();
 }
 
 // apaga task na api e depois sincroniza o array local
 async function deleteTask(id: number) {
-  await apiDeleteTask(id);
+  await taskService.deleteTask(id);
   await loadTasks();
 }
 
@@ -486,7 +483,7 @@ async function createTagFromInput(): Promise<void> {
   const newId = Math.max(...tags.map(t => t.id), 0) + 1;
 
   try {
-    await apiCreateTag({ id: newId, nome: tagName, created_at: new Date().toISOString().split('T')[0] });
+    await tagService.createTag({ id: newId, nome: tagName, created_at: new Date().toISOString().split('T')[0] });
     await loadTags();
   } catch (error) {
     console.error('erro ao criar tag na api:', error);
