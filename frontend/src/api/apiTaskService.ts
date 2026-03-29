@@ -59,3 +59,11 @@ export async function addTagToTask(taskId: number, tagId: number): Promise<void>
   });
   if (!res.ok) throw new Error('Erro ao adicionar tag na task');
 }
+
+// remove uma tag de uma tarefa
+export async function removeTagFromTask(taskId: number, tagId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/tasks/${taskId}/tags/${tagId}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error('Erro ao remover tag da task');
+}

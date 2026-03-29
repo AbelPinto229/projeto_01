@@ -5,7 +5,7 @@ import { db } from '../db.js';
 // o resultado da query é desestruturado para pegar o array de tags (rows)
 // retorna esse array contendo todas as tags existentes
 export const getTags = async () => {
-  const [rows] = await db.query('SELECT id, name AS nome, created_at FROM tags');
+  const [rows] = await db.query('SELECT id, nome, created_at FROM tags');
   return rows;
 };
 
@@ -17,12 +17,12 @@ export const getTags = async () => {
 export const createTag = async (data) => {
   const nome = data.nome ?? data.name;
   const [result] = await db.query(
-    'INSERT INTO tags (name) VALUES (?)',
+    'INSERT INTO tags (nome) VALUES (?)',
     [nome]
   );
 
   const [created] = await db.query(
-    'SELECT id, name AS nome, created_at FROM tags WHERE id = ?',
+    'SELECT id, nome, created_at FROM tags WHERE id = ?',
     [result.insertId]
   );
 

@@ -99,3 +99,19 @@ export const addTagToTask = async (req, res) => {
     res.status(400).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }
+
+/**
+ * remove a associação de uma tag com uma tarefa
+ */
+export const removeTagFromTask = async (req, res) => {
+  try {
+    const result = await taskService.removeTagFromTask(
+      Number(req.params.id),
+      Number(req.params.tagId)
+    );
+
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
+  }
+}

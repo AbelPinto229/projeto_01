@@ -10,6 +10,7 @@ import { TaskRenderer } from './src/ui/TaskRenderer.js';
 import { openUserModal as openUserModalUI, closeUserModal as closeUserModalUI, openTaskModal as openTaskModalUI, closeTaskModal as closeTaskModalUI, setupModalBackdropHandlers } from './src/ui/ModalManager.js';
 import { roleManager } from './src/security/RoleManager.js';
 import { systemLogger } from './src/logs/SystemLogger.js';
+import { getTasksForTag as apiGetTasksForTag } from './src/api/apiTagService.js';
 import { canEditData as checkCanEditData, canCreateTag as checkCanCreateTag } from './src/security/permissions.js';
 // ============================================
 // STATE VARIABLES
@@ -27,6 +28,23 @@ let tasks = [];
 let users = [];
 // array local para manter o estado das tags no frontend
 let tags = [];
+// mapeamento local: task id -> nomes das tags associadas
+let taskTagsMap = {};
+async function refreshTaskTagsMap() {
+    const nextMap = {};
+    await Promise.all(tags.map(async (tag) => {
+        const taggedTasks = await apiGetTasksForTag(tag.id);
+        taggedTasks.forEach(task => {
+            if (!nextMap[task.id]) {
+                nextMap[task.id] = [];
+            }
+            if (!nextMap[task.id].includes(tag.nome)) {
+                nextMap[task.id].push(tag.nome);
+            }
+        });
+    }));
+    taskTagsMap = nextMap;
+}
 // users
 // vai buscar users da api e atualiza o array local
 async function loadUsers() {
@@ -52,7 +70,9 @@ async function deleteUser(id) {
 // vai buscar tags da api e atualiza o array local
 async function loadTags() {
     tags = await tagService.getTags();
+    await refreshTaskTagsMap();
     renderTags();
+    renderTasks();
 }
 // apaga tag na api e depois sincroniza o array local
 async function deleteTag(id) {
@@ -63,6 +83,7 @@ async function deleteTag(id) {
 // vai buscar da api e atualiza e renderiza o array local 
 async function loadTasks() {
     tasks = await taskService.loadTasks();
+    await refreshTaskTagsMap();
     renderTasks();
 }
 // cria task na api e depois sincroniza o array local
@@ -116,7 +137,7 @@ function closeUserModal() {
     closeUserModalUI();
 }
 function openTaskModal(taskId) {
-    openTaskModalUI({ taskId, tasks, canEditData: checkCanEditData(currentRole) });
+    openTaskModalUI({ taskId, tasks, taskTagNamesById: taskTagsMap, canEditData: checkCanEditData(currentRole) });
 }
 function closeTaskModal() {
     closeTaskModalUI();
@@ -277,6 +298,21 @@ function renderTasks() {
         const responsibleCell = document.createElement('td');
         responsibleCell.textContent = task.responsavelNome;
         const tagsCell = document.createElement('td');
+        const taskTagNames = taskTagsMap[task.id] || [];
+        if (taskTagNames.length === 0) {
+            tagsCell.textContent = '-';
+        }
+        else {
+            taskTagNames.forEach(tagName => {
+                const badge = document.createElement('span');
+                badge.className = 'status-badge';
+                badge.style.backgroundColor = getTagColor(tagName);
+                badge.style.color = '#ffffff';
+                badge.style.marginRight = '6px';
+                badge.textContent = tagName;
+                tagsCell.appendChild(badge);
+            });
+        }
         const statusCell = document.createElement('td');
         const statusBadge = document.createElement('span');
         statusBadge.className = `status-badge ${task.concluida ? 'status-completed' : 'status-pending'}`;
@@ -525,15 +561,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         const category = document.getElementById('taskCategory').value;
         const responsible = document.getElementById('taskResponsible').value;
         const status = document.getElementById('taskStatus').value;
+        const selectedTags = Array.from(document.getElementById('taskTagsSelect').selectedOptions)
+            .map(option => option.value)
+            .filter(value => value && value !== 'Selecionar tags');
         const createdAt = new Date().toISOString().split('T')[0];
+        let taskIdForTags;
         try {
             if (id) {
-                await editTask({ id: parseInt(id), titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+                taskIdForTags = parseInt(id, 10);
+                await editTask({ id: taskIdForTags, titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
             }
             else {
                 const nextId = Math.max(...tasks.map(t => t.id), 0) + 1;
                 await createTask({ id: nextId, titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+                taskIdForTags = Math.max(...tasks.map(t => t.id), 0);
             }
+            const selectedTagIds = tags
+                .filter(tag => selectedTags.includes(tag.nome))
+                .map(tag => tag.id);
+            const existingTagIds = (taskTagsMap[taskIdForTags] || [])
+                .map(tagName => tags.find(tag => tag.nome === tagName)?.id)
+                .filter((id) => typeof id === 'number');
+            const tagIdsToAdd = selectedTagIds.filter(tagId => !existingTagIds.includes(tagId));
+            const tagIdsToRemove = existingTagIds.filter(tagId => !selectedTagIds.includes(tagId));
+            for (const tagId of tagIdsToAdd) {
+                try {
+                    await taskService.addTagToTask(taskIdForTags, tagId);
+                }
+                catch (tagError) {
+                    // pode falhar se a relação já existir; continua com as restantes
+                    console.warn('aviso ao associar tag na task:', tagError);
+                }
+            }
+            for (const tagId of tagIdsToRemove) {
+                try {
+                    await taskService.removeTagFromTask(taskIdForTags, tagId);
+                }
+                catch (tagError) {
+                    console.warn('aviso ao remover tag da task:', tagError);
+                }
+            }
+            await loadTasks();
         }
         catch (error) {
             console.error('erro ao sincronizar task com a api:', error);

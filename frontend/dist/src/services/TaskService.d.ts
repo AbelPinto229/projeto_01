@@ -9,5 +9,6 @@ export declare class TaskService {
     updateTask(task: Task): Promise<void>;
     deleteTask(id: number): Promise<void>;
     addTagToTask(taskId: number, tagId: number): Promise<void>;
+    removeTagFromTask(taskId: number, tagId: number): Promise<void>;
 }
 //# sourceMappingURL=TaskService.d.ts.map

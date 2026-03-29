@@ -145,10 +145,15 @@ export const getTasksByUserId = async (userId) => {
 // inserir a tag na tarefa, executa uma instrucao em que o ? sao substituios pelos valores do array 
 // que o cliente enviou, depois retorna uma mensagem de sucesso para o cliente.
 export const addTagToTask = async (taskId, tagBody) => {
+  const tagId = tagBody.tag_id ?? tagBody.tagId;
+
+  if (!tagId) {
+    throw new Error("Tag inválida para associação");
+  }
 
   const [rows] = await db.query(
     'SELECT * FROM task_tags WHERE task_id = ? AND tag_id = ?',
-    [taskId, tagBody.tag_id]
+    [taskId, tagId]
   );
   
   
@@ -158,8 +163,26 @@ export const addTagToTask = async (taskId, tagBody) => {
 
   await db.query(
     'INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?)',
-    [taskId, tagBody.tag_id]
+    [taskId, tagId]
   );
   
   return { message: "Tag adicionada à task com sucesso" };
+};
+
+// remove a associação entre tarefa e tag
+export const removeTagFromTask = async (taskId, tagId) => {
+  if (!tagId) {
+    throw new Error("Tag inválida para remoção");
+  }
+
+  const [result] = await db.query(
+    'DELETE FROM task_tags WHERE task_id = ? AND tag_id = ?',
+    [taskId, tagId]
+  );
+
+  if (result.affectedRows === 0) {
+    throw new Error("Associação de tag não encontrada para esta task");
+  }
+
+  return { message: "Tag removida da task com sucesso" };
 };

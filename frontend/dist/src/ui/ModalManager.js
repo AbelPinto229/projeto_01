@@ -29,7 +29,7 @@ export function closeUserModal() {
     modal.classList.add('modal-hidden');
 }
 export function openTaskModal(options) {
-    const { taskId, tasks, canEditData } = options;
+    const { taskId, tasks, taskTagNamesById, canEditData } = options;
     if (!canEditData)
         return;
     const modal = document.getElementById('taskModal');
@@ -47,6 +47,12 @@ export function openTaskModal(options) {
             document.getElementById('taskStatus').value = task.concluida ? 'completed' : 'pending';
             Array.from(select.options).forEach(option => {
                 option.selected = false;
+            });
+            const selectedTagNames = taskTagNamesById?.[task.id] ?? [];
+            Array.from(select.options).forEach(option => {
+                if (selectedTagNames.includes(option.value)) {
+                    option.selected = true;
+                }
             });
         }
     }

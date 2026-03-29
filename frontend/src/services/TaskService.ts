@@ -1,5 +1,5 @@
 import type { Task, TaskStats } from '../models/Task.js';
-import { getTasks as apiGetTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, addTagToTask as apiAddTagToTask } from '../api/apiTaskService.js';
+import { getTasks as apiGetTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, addTagToTask as apiAddTagToTask, removeTagFromTask as apiRemoveTagFromTask } from '../api/apiTaskService.js';
 
 export class TaskService {
   private tasks: Task[] = [];
@@ -72,6 +72,11 @@ export class TaskService {
 
   async addTagToTask(taskId: number, tagId: number): Promise<void> {
     await apiAddTagToTask(taskId, tagId);
+    await this.loadTasks();
+  }
+
+  async removeTagFromTask(taskId: number, tagId: number): Promise<void> {
+    await apiRemoveTagFromTask(taskId, tagId);
     await this.loadTasks();
   }
 }
