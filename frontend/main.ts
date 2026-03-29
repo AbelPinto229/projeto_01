@@ -565,20 +565,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupUserControls();
   setupTaskControls();
   updateRoleUI();
-  await Promise.all([loadUsers(), loadTasks(), loadTags()]);
-  updateStats();
   
   // Create User Button
-  const createUserBtn = document.getElementById('createUserBtn') as HTMLButtonElement;
-  createUserBtn.addEventListener('click', () => {
-    openUserModal();
-  });
+  const createUserBtn = document.getElementById('createUserBtn') as HTMLButtonElement | null;
+  if (createUserBtn) {
+    createUserBtn.addEventListener('click', () => {
+      openUserModal();
+    });
+  }
   
   // Create Task Button
-  const createTaskBtn = document.getElementById('createTaskBtn') as HTMLButtonElement;
-  createTaskBtn.addEventListener('click', () => {
-    openTaskModal();
-  });
+  const createTaskBtn = document.getElementById('createTaskBtn') as HTMLButtonElement | null;
+  if (createTaskBtn) {
+    createTaskBtn.addEventListener('click', () => {
+      openTaskModal();
+    });
+  }
   
   // Create Tag Button
   const createTagBtn = document.getElementById('createTagBtn') as HTMLButtonElement | null;
@@ -596,6 +598,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         await createTagFromInput();
       }
     });
+  }
+
+  try {
+    await Promise.all([loadUsers(), loadTasks(), loadTags()]);
+    updateStats();
+  } catch (error) {
+    console.error('erro ao carregar dados iniciais da api:', error);
   }
   
   // User Form Submit

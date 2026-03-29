@@ -447,18 +447,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupUserControls();
     setupTaskControls();
     updateRoleUI();
-    await Promise.all([loadUsers(), loadTasks(), loadTags()]);
-    updateStats();
     // Create User Button
     const createUserBtn = document.getElementById('createUserBtn');
-    createUserBtn.addEventListener('click', () => {
-        openUserModal();
-    });
+    if (createUserBtn) {
+        createUserBtn.addEventListener('click', () => {
+            openUserModal();
+        });
+    }
     // Create Task Button
     const createTaskBtn = document.getElementById('createTaskBtn');
-    createTaskBtn.addEventListener('click', () => {
-        openTaskModal();
-    });
+    if (createTaskBtn) {
+        createTaskBtn.addEventListener('click', () => {
+            openTaskModal();
+        });
+    }
     // Create Tag Button
     const createTagBtn = document.getElementById('createTagBtn');
     if (createTagBtn) {
@@ -474,6 +476,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await createTagFromInput();
             }
         });
+    }
+    try {
+        await Promise.all([loadUsers(), loadTasks(), loadTags()]);
+        updateStats();
+    }
+    catch (error) {
+        console.error('erro ao carregar dados iniciais da api:', error);
     }
     // User Form Submit
     const userForm = document.getElementById('userForm');
