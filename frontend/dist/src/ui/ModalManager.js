@@ -44,7 +44,7 @@ export function openTaskModal(options) {
             document.getElementById('taskTitle').value = task.titulo;
             document.getElementById('taskCategory').value = task.categoria;
             document.getElementById('taskResponsible').value = task.responsavelNome;
-            document.getElementById('taskStatus').value = task.concluida ? 'completed' : 'pending';
+            document.getElementById('taskStatus').value = task.estado;
             Array.from(select.options).forEach(option => {
                 option.selected = false;
             });

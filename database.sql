@@ -27,6 +27,7 @@ CREATE TABLE tasks (
     id INT PRIMARY KEY AUTO_INCREMENT,
     titulo VARCHAR(200) NOT NULL,
     categoria VARCHAR(50) NOT NULL,
+    estado ENUM('pending', 'in-progress', 'completed') DEFAULT 'pending',
     concluida BOOLEAN DEFAULT FALSE,
     responsavelNome VARCHAR(100) NOT NULL,
     dataConclusao DATE NULL,
@@ -77,17 +78,17 @@ INSERT INTO users (name, email, active) VALUES
 ('Beatriz Martins', 'beatriz.martins@email.com', TRUE);
 
 -- Inserir tarefas
-INSERT INTO tasks (titulo, categoria, concluida, responsavelNome, dataConclusao) VALUES
-('Desenvolver API REST', 'Desenvolvimento', TRUE, 'João Silva', '2026-03-15'),
-('Criar documentação técnica', 'Documentação', FALSE, 'Maria Santos', NULL),
-('Implementar autenticação', 'Segurança', TRUE, 'Pedro Oliveira', '2026-03-10'),
-('Realizar testes unitários', 'Testes', FALSE, 'Ana Costa', NULL),
-('Configurar banco de dados', 'Infraestrutura', TRUE, 'Carlos Ferreira', '2026-03-05'),
-('Design da interface', 'Frontend', FALSE, 'Sofia Rodrigues', NULL),
-('Otimizar queries SQL', 'Performance', FALSE, 'Miguel Alves', NULL),
-('Revisar código', 'Code Review', TRUE, 'Beatriz Martins', '2026-03-20'),
-('Deploy em produção', 'DevOps', FALSE, 'João Silva', NULL),
-('Criar backup automático', 'Infraestrutura', FALSE, 'Carlos Ferreira', NULL);
+INSERT INTO tasks (titulo, categoria, estado, concluida, responsavelNome, dataConclusao) VALUES
+('Desenvolver API REST', 'Backend', 'in-progress', FALSE, 'João Silva', NULL),
+('Criar documentação técnica', 'Documentação', 'pending', FALSE, 'Maria Santos', NULL),
+('Implementar autenticação', 'Segurança', 'completed', TRUE, 'Pedro Oliveira', '2026-03-10'),
+('Realizar testes unitários', 'Testes', 'in-progress', FALSE, 'Ana Costa', NULL),
+('Configurar banco de dados', 'Infraestrutura', 'completed', TRUE, 'Carlos Ferreira', '2026-03-05'),
+('Design da interface', 'Frontend', 'pending', FALSE, 'Sofia Rodrigues', NULL),
+('Otimizar queries SQL', 'Performance', 'in-progress', FALSE, 'Miguel Alves', NULL),
+('Revisar código', 'Code Review', 'completed', TRUE, 'Beatriz Martins', '2026-03-20'),
+('Deploy em produção', 'DevOps', 'pending', FALSE, 'João Silva', NULL),
+('Criar backup automático', 'Infraestrutura', 'pending', FALSE, 'Carlos Ferreira', NULL);
 
 -- Inserir tags
 INSERT INTO tags (nome) VALUES

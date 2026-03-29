@@ -63,7 +63,7 @@ export function openTaskModal(options: OpenTaskModalOptions): void {
       (document.getElementById('taskTitle') as HTMLInputElement).value = task.titulo;
       (document.getElementById('taskCategory') as HTMLInputElement).value = task.categoria;
       (document.getElementById('taskResponsible') as HTMLInputElement).value = task.responsavelNome;
-      (document.getElementById('taskStatus') as HTMLSelectElement).value = task.concluida ? 'completed' : 'pending';
+      (document.getElementById('taskStatus') as HTMLSelectElement).value = task.estado;
 
       Array.from(select.options).forEach(option => {
         option.selected = false;

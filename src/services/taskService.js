@@ -17,6 +17,7 @@ export const getTasks = async (query = {}) => {
       tasks.id,
       tasks.titulo,
       tasks.categoria,
+      tasks.estado,
       tasks.concluida,
       tasks.responsavelNome,
       tasks.dataConclusao,
@@ -39,6 +40,7 @@ export const getTasks = async (query = {}) => {
       tasks.id,
       tasks.titulo,
       tasks.categoria,
+      tasks.estado,
       tasks.concluida,
       tasks.responsavelNome,
       tasks.dataConclusao,
@@ -64,6 +66,7 @@ export const getTasks = async (query = {}) => {
       id: row.id,
       titulo: row.titulo,
       categoria: row.categoria,
+      estado: row.estado,
       concluida: row.concluida,
       responsavelNome: row.responsavelNome,
       dataConclusao: row.dataConclusao,
@@ -82,17 +85,21 @@ export const getTasks = async (query = {}) => {
 //que o cliente definiu, os ...data ajuda a nao repetir o codigo senao tinha que coloca titulo = data.titulo
 //categoria = data.categoria e por ai adiante.
 export const createTask = async (body) => {
+  const estado = body.estado ?? (body.concluida ? 'completed' : 'pending');
+  const concluida = estado === 'completed';
+  const dataConclusao = estado === 'completed' ? (body.dataConclusao ?? new Date().toISOString().slice(0, 10)) : null;
 
   const [result] = await db.query(
-    'INSERT INTO tasks (titulo, categoria, concluida, responsavelNome, dataConclusao) VALUES (?, ?, ?, ?, ?)',
-    [body.titulo, body.categoria, body.concluida ?? false, body.responsavelNome, body.dataConclusao ?? null]
+    'INSERT INTO tasks (titulo, categoria, estado, concluida, responsavelNome, dataConclusao) VALUES (?, ?, ?, ?, ?, ?)',
+    [body.titulo, body.categoria, estado, concluida, body.responsavelNome, dataConclusao]
   );
 
   return {
     id: result.insertId,
     ...body,
-    concluida: body.concluida ?? false,
-    dataConclusao: body.dataConclusao ?? null
+    estado,
+    concluida,
+    dataConclusao
   };
 };
 
@@ -117,17 +124,22 @@ export const updateTask = async (id, body) => {
   const newTask = {   
       titulo : body.titulo ?? task.titulo,
       categoria : body.categoria ?? task.categoria,
-      concluida : body.concluida ?? task.concluida,
+      estado : body.estado ?? task.estado ?? (task.concluida ? 'completed' : 'pending'),
       responsavelNome : body.responsavelNome ?? task.responsavelNome,
-      dataConclusao : body.dataConclusao ?? task.dataConclusao,
       id: task.id
   };
 
+  newTask.concluida = newTask.estado === 'completed';
+  newTask.dataConclusao = newTask.estado === 'completed'
+    ? (body.dataConclusao ?? task.dataConclusao ?? new Date().toISOString().slice(0, 10))
+    : null;
+
   await db.query(
-    'UPDATE tasks SET titulo = ?, categoria = ?, concluida = ?, responsavelNome = ?, dataConclusao = ? WHERE id = ?',
+    'UPDATE tasks SET titulo = ?, categoria = ?, estado = ?, concluida = ?, responsavelNome = ?, dataConclusao = ? WHERE id = ?',
     [
       newTask.titulo,
       newTask.categoria,
+      newTask.estado,
       newTask.concluida,
       newTask.responsavelNome,
       newTask.dataConclusao,

@@ -327,8 +327,7 @@ function renderTasks(): void {
 
   const term = taskSearchTerm.trim().toLowerCase();
   const filteredTasks = tasks.filter(task => {
-    if (currentTaskFilter === 'completed' && !task.concluida) return false;
-    if (currentTaskFilter === 'pending' && task.concluida) return false;
+    if (currentTaskFilter !== 'all' && task.estado !== currentTaskFilter) return false;
     if (!term) return true;
 
     const searchable = `${task.titulo} ${task.categoria} ${task.responsavelNome}`.toLowerCase();
@@ -379,8 +378,8 @@ function renderTasks(): void {
 
     const statusCell = document.createElement('td');
     const statusBadge = document.createElement('span');
-    statusBadge.className = `status-badge ${task.concluida ? 'status-completed' : 'status-pending'}`;
-    statusBadge.textContent = task.concluida ? 'Concluido' : 'Pendente';
+    statusBadge.className = `status-badge ${task.estado === 'completed' ? 'status-completed' : 'status-pending'}`;
+    statusBadge.textContent = task.estado === 'completed' ? 'Concluido' : task.estado === 'in-progress' ? 'Em Progresso' : 'Pendente';
     statusCell.appendChild(statusBadge);
 
     const createdAtCell = document.createElement('td');
@@ -676,10 +675,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       if (id) {
         taskIdForTags = parseInt(id, 10);
-        await editTask({ id: taskIdForTags, titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+        await editTask({ id: taskIdForTags, titulo: title, categoria: category, estado: status, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
       } else {
         const nextId = Math.max(...tasks.map(t => t.id), 0) + 1;
-        await createTask({ id: nextId, titulo: title, categoria: category, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+        await createTask({ id: nextId, titulo: title, categoria: category, estado: status, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
         taskIdForTags = Math.max(...tasks.map(t => t.id), 0);
       }
 

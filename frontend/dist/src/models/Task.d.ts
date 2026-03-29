@@ -2,6 +2,7 @@ export interface Task {
     id: number;
     titulo: string;
     categoria: string;
+    estado: 'pending' | 'in-progress' | 'completed';
     concluida: boolean;
     responsavelNome: string;
     dataConclusao: string | null;
