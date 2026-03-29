@@ -12,22 +12,66 @@ import { db } from "../db.js";
 //o sql +- é para concetenar o string da instrucao, ou seja a linha select com a linha where, senao 
 //nao funciona.
 export const getTasks = async (query = {}) => {
-  let sql = 'SELECT * FROM tasks';
+  let sql = `
+    SELECT
+      tasks.id,
+      tasks.titulo,
+      tasks.categoria,
+      tasks.concluida,
+      tasks.responsavelNome,
+      tasks.dataConclusao,
+      tasks.created_at,
+      GROUP_CONCAT(DISTINCT task_tags.tag_id ORDER BY task_tags.tag_id SEPARATOR ',') AS tagIdsCsv,
+      GROUP_CONCAT(DISTINCT tags.nome ORDER BY tags.nome SEPARATOR ',') AS tagNamesCsv
+    FROM tasks
+    LEFT JOIN task_tags ON task_tags.task_id = tasks.id
+    LEFT JOIN tags ON tags.id = task_tags.tag_id
+  `;
   const params = []; 
 
   if (query.search) {
-    sql += ' WHERE titulo LIKE ?';
+    sql += ' WHERE tasks.titulo LIKE ?';
     params.push(`%${query.search}%`);
   }
 
+  sql += `
+    GROUP BY
+      tasks.id,
+      tasks.titulo,
+      tasks.categoria,
+      tasks.concluida,
+      tasks.responsavelNome,
+      tasks.dataConclusao,
+      tasks.created_at
+  `;
+
   if (query.sort === 'asc') {
-    sql += ' ORDER BY titulo ASC';
+    sql += ' ORDER BY tasks.titulo ASC';
   } else if (query.sort === 'desc') {
-    sql += ' ORDER BY titulo DESC';
+    sql += ' ORDER BY tasks.titulo DESC';
   }
 
   const [rows] = await db.query(sql, params);
-  return rows;
+  return rows.map((row) => {
+    const tagIds = row.tagIdsCsv
+      ? row.tagIdsCsv.split(',').map((value) => Number(value))
+      : [];
+    const tags = row.tagNamesCsv
+      ? row.tagNamesCsv.split(',')
+      : [];
+
+    return {
+      id: row.id,
+      titulo: row.titulo,
+      categoria: row.categoria,
+      concluida: row.concluida,
+      responsavelNome: row.responsavelNome,
+      dataConclusao: row.dataConclusao,
+      created_at: row.created_at,
+      tagIds,
+      tags
+    };
+  });
 };
 
 

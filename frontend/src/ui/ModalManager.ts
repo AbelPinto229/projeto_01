@@ -10,7 +10,6 @@ interface OpenUserModalOptions {
 interface OpenTaskModalOptions {
   taskId?: number;
   tasks: Task[];
-  taskTagNamesById?: Record<number, string[]>;
   canEditData: boolean;
 }
 
@@ -48,7 +47,7 @@ export function closeUserModal(): void {
 }
 
 export function openTaskModal(options: OpenTaskModalOptions): void {
-  const { taskId, tasks, taskTagNamesById, canEditData } = options;
+  const { taskId, tasks, canEditData } = options;
   if (!canEditData) return;
 
   const modal = document.getElementById('taskModal') as HTMLDivElement;
@@ -70,7 +69,7 @@ export function openTaskModal(options: OpenTaskModalOptions): void {
         option.selected = false;
       });
 
-      const selectedTagNames = taskTagNamesById?.[task.id] ?? [];
+      const selectedTagNames = task.tags ?? [];
       Array.from(select.options).forEach(option => {
         if (selectedTagNames.includes(option.value)) {
           option.selected = true;

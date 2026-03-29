@@ -7,6 +7,8 @@ export interface Task {
   responsavelNome: string;
   dataConclusao: string | null;
   created_at: string;
+  tags?: string[];
+  tagIds?: number[];
 }
 
 export interface TaskStats {

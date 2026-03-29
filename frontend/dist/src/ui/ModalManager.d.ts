@@ -8,7 +8,6 @@ interface OpenUserModalOptions {
 interface OpenTaskModalOptions {
     taskId?: number;
     tasks: Task[];
-    taskTagNamesById?: Record<number, string[]>;
     canEditData: boolean;
 }
 export declare function openUserModal(options: OpenUserModalOptions): void;

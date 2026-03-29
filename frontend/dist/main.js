@@ -10,7 +10,6 @@ import { TaskRenderer } from './src/ui/TaskRenderer.js';
 import { openUserModal as openUserModalUI, closeUserModal as closeUserModalUI, openTaskModal as openTaskModalUI, closeTaskModal as closeTaskModalUI, setupModalBackdropHandlers } from './src/ui/ModalManager.js';
 import { roleManager } from './src/security/RoleManager.js';
 import { systemLogger } from './src/logs/SystemLogger.js';
-import { getTasksForTag as apiGetTasksForTag } from './src/api/apiTagService.js';
 import { canEditData as checkCanEditData, canCreateTag as checkCanCreateTag } from './src/security/permissions.js';
 // ============================================
 // STATE VARIABLES
@@ -28,23 +27,6 @@ let tasks = [];
 let users = [];
 // array local para manter o estado das tags no frontend
 let tags = [];
-// mapeamento local: task id -> nomes das tags associadas
-let taskTagsMap = {};
-async function refreshTaskTagsMap() {
-    const nextMap = {};
-    await Promise.all(tags.map(async (tag) => {
-        const taggedTasks = await apiGetTasksForTag(tag.id);
-        taggedTasks.forEach(task => {
-            if (!nextMap[task.id]) {
-                nextMap[task.id] = [];
-            }
-            if (!nextMap[task.id].includes(tag.nome)) {
-                nextMap[task.id].push(tag.nome);
-            }
-        });
-    }));
-    taskTagsMap = nextMap;
-}
 // users
 // vai buscar users da api e atualiza o array local
 async function loadUsers() {
@@ -70,9 +52,7 @@ async function deleteUser(id) {
 // vai buscar tags da api e atualiza o array local
 async function loadTags() {
     tags = await tagService.getTags();
-    await refreshTaskTagsMap();
     renderTags();
-    renderTasks();
 }
 // apaga tag na api e depois sincroniza o array local
 async function deleteTag(id) {
@@ -83,7 +63,6 @@ async function deleteTag(id) {
 // vai buscar da api e atualiza e renderiza o array local 
 async function loadTasks() {
     tasks = await taskService.loadTasks();
-    await refreshTaskTagsMap();
     renderTasks();
 }
 // cria task na api e depois sincroniza o array local
@@ -137,7 +116,7 @@ function closeUserModal() {
     closeUserModalUI();
 }
 function openTaskModal(taskId) {
-    openTaskModalUI({ taskId, tasks, taskTagNamesById: taskTagsMap, canEditData: checkCanEditData(currentRole) });
+    openTaskModalUI({ taskId, tasks, canEditData: checkCanEditData(currentRole) });
 }
 function closeTaskModal() {
     closeTaskModalUI();
@@ -298,7 +277,7 @@ function renderTasks() {
         const responsibleCell = document.createElement('td');
         responsibleCell.textContent = task.responsavelNome;
         const tagsCell = document.createElement('td');
-        const taskTagNames = taskTagsMap[task.id] || [];
+        const taskTagNames = task.tags || [];
         if (taskTagNames.length === 0) {
             tagsCell.textContent = '-';
         }
@@ -579,9 +558,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const selectedTagIds = tags
                 .filter(tag => selectedTags.includes(tag.nome))
                 .map(tag => tag.id);
-            const existingTagIds = (taskTagsMap[taskIdForTags] || [])
-                .map(tagName => tags.find(tag => tag.nome === tagName)?.id)
-                .filter((id) => typeof id === 'number');
+            const existingTagIds = tasks.find(task => task.id === taskIdForTags)?.tagIds || [];
             const tagIdsToAdd = selectedTagIds.filter(tagId => !existingTagIds.includes(tagId));
             const tagIdsToRemove = existingTagIds.filter(tagId => !selectedTagIds.includes(tagId));
             for (const tagId of tagIdsToAdd) {
