@@ -1,3 +1,2 @@
-// Barrel file - UI exports
-export { UserRenderer } from './UserRenderer.js';
-export { TaskRenderer } from './TaskRenderer.js';
+// ficheiro de exports da ui
+export * from './ModalManager.js';

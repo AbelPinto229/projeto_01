@@ -10,12 +10,9 @@ export const createComment = async (taskId, data) => {
     'INSERT INTO comments (task_id, user_id, conteudo) VALUES (?, ?, ?)',
     [taskId, data.user_id, data.conteudo]
   );
-  return {
-    id: result.insertId,
-    task_id: taskId,
-    user_id: data.user_id,
-    conteudo: data.conteudo
-  };
+
+  const [created] = await db.query('SELECT * FROM comments WHERE id = ?', [result.insertId]);
+  return created[0];
 };
 
 // executa uma função assíncrona que busca todos os comentários de uma tarefa específica

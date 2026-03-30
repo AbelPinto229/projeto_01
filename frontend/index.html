@@ -169,6 +169,14 @@
                 <option disabled>Selecionar tags</option>
               </select>
             </div>
+            <div id="taskCommentsSection" class="field field-full comments-section comments-hidden">
+              <label for="taskCommentInput">Comentários</label>
+              <div id="taskCommentsList" class="comments-list"></div>
+              <textarea id="taskCommentInput" class="input comments-input" rows="3" placeholder="Adicionar comentário"></textarea>
+              <div class="comments-actions">
+                <button id="addTaskCommentBtn" type="button" class="btn btn-neutral">Adicionar comentário</button>
+              </div>
+            </div>
           </div>
           <div class="form-actions">
             <button type="button" onclick="closeTaskModal()" class="btn btn-neutral">Cancelar</button>

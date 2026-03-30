@@ -1,3 +1,2 @@
-export { UserRenderer } from './UserRenderer.js';
-export { TaskRenderer } from './TaskRenderer.js';
+export * from './ModalManager.js';
 //# sourceMappingURL=index.d.ts.map

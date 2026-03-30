@@ -1,7 +1,6 @@
 import type { User, UserStats } from '../models/User.js';
 export declare class UserService {
     private users;
-    loadUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]>;
     getUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]>;
     getUserStats(): UserStats;
     createUser(user: User): Promise<void>;

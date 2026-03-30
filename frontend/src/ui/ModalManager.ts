@@ -13,6 +13,7 @@ interface OpenTaskModalOptions {
   canEditData: boolean;
 }
 
+// abre o modal de utilizador para criação ou edição
 export function openUserModal(options: OpenUserModalOptions): void {
   const { userId, users, canEditData } = options;
   if (!canEditData) return;
@@ -46,6 +47,7 @@ export function closeUserModal(): void {
   modal.classList.add('modal-hidden');
 }
 
+// abre o modal de tarefa para criação ou edição
 export function openTaskModal(options: OpenTaskModalOptions): void {
   const { taskId, tasks, canEditData } = options;
   if (!canEditData) return;
@@ -65,6 +67,7 @@ export function openTaskModal(options: OpenTaskModalOptions): void {
       (document.getElementById('taskResponsible') as HTMLInputElement).value = task.responsavelNome;
       (document.getElementById('taskStatus') as HTMLSelectElement).value = task.estado;
 
+      // limpa seleção anterior e aplica as tags da tarefa atual
       Array.from(select.options).forEach(option => {
         option.selected = false;
       });
@@ -96,6 +99,7 @@ export function closeTaskModal(): void {
   modal.classList.add('modal-hidden');
 }
 
+// fecha o modal ao clicar fora da área de conteúdo
 export function setupModalBackdropHandlers(): void {
   const userModal = document.getElementById('userModal') as HTMLDivElement;
   userModal.addEventListener('click', event => {

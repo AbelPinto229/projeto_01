@@ -77,7 +77,7 @@ export const deleteUser = async (req, res) => {
 
 /**
  * calcula estatísticas sobre os usuários no sistema
- * Retorna: total de usuários, ativos e percentagem de ativos
+ * retorna: total de usuários, ativos e percentagem de ativos
  */
 export const getUserStats = async (req, res) => {
   try {

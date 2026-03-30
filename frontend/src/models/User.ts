@@ -1,4 +1,4 @@
-// User Model
+// modelo de utilizador
 export interface User {
   id: number;
   name: string;

@@ -4,11 +4,6 @@ import { getTags as apiGetTags, createTag as apiCreateTag, deleteTag as apiDelet
 export class TagService {
   private tags: Tag[] = [];
 
-  // carrega as tags da api
-  async loadTags(): Promise<Tag[]> {
-    return this.getTags();
-  }
-
   // devolve todas as tags
   async getTags(): Promise<Tag[]> {
     this.tags = await apiGetTags();
@@ -18,12 +13,12 @@ export class TagService {
   // cria uma nova tag
   async createTag(tag: Tag): Promise<void> {
     await apiCreateTag(tag);
-    await this.loadTags();
+    await this.getTags();
   }
 
   // apaga uma tag
   async deleteTag(id: number): Promise<void> {
     await apiDeleteTag(id);
-    await this.loadTags();
+    await this.getTags();
   }
 }

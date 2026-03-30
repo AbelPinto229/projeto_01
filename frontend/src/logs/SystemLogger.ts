@@ -1,4 +1,4 @@
-// System Logger
+// logger do sistema
 export class SystemLogger {
   private logs: Array<{ timestamp: string; level: string; message: string }> = [];
 
@@ -6,12 +6,12 @@ export class SystemLogger {
     const timestamp = new Date().toLocaleTimeString();
     this.logs.push({ timestamp, level, message });
     
-    // Also log to console
+    // também regista na consola
     console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log'](
       `[${timestamp}] ${level.toUpperCase()}: ${message}`
     );
 
-    // Keep only last 100 logs
+    // mantém apenas os últimos 100 registos
     if (this.logs.length > 100) {
       this.logs.shift();
     }

@@ -1,4 +1,4 @@
-// Task Model
+// modelo de tarefa
 export interface Task {
   id: number;
   titulo: string;

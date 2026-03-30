@@ -1,4 +1,4 @@
-// User Role Enum
+// enum dos papéis de utilizador
 export enum UserRole {
   ADMIN = 'admin',
   MANAGER = 'manager',
@@ -6,7 +6,7 @@ export enum UserRole {
   VIEWER = 'viewer'
 }
 
-// Permissions for each role
+// permissões de cada papel
 export const rolePermissions: Record<UserRole, string[]> = {
   [UserRole.ADMIN]: ['create_user', 'edit_user', 'delete_user', 'create_task', 'edit_task', 'delete_task', 'create_tag', 'delete_tag', 'manage_all'],
   [UserRole.MANAGER]: ['create_task', 'edit_task', 'delete_task', 'create_tag', 'delete_tag', 'assign_task'],
@@ -23,16 +23,16 @@ export class RoleManager {
     if (Object.values(UserRole).includes(roleStr as UserRole)) {
       this.currentRole = roleStr as UserRole;
       
-      // Update current role display
+      // atualiza a indicação do papel atual
       const currentRoleEl = document.getElementById('currentRole');
       if (currentRoleEl) {
         currentRoleEl.textContent = this.currentRole.charAt(0).toUpperCase() + this.currentRole.slice(1);
       }
 
-      // Apply role permissions
+      // aplica as permissões do papel
       this.applyRolePermissions();
       
-      // Notify listeners
+      // notifica os listeners
       this.notifyListeners();
     }
   }
@@ -49,7 +49,7 @@ export class RoleManager {
     return rolePermissions[this.currentRole].includes(permission);
   }
 
-  // Subscribe to role changes
+  // subscreve alterações de papel
   subscribe(callback: (role: UserRole) => void): void {
     this.listeners.push(callback);
   }
@@ -59,7 +59,7 @@ export class RoleManager {
   }
 
   private applyRolePermissions(): void {
-    // Wait for DOM to be ready, then update UI
+    // espera que o dom esteja pronto e depois atualiza a ui
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.updateUIElements());
     } else {
@@ -68,48 +68,48 @@ export class RoleManager {
   }
 
   private updateUIElements(): void {
-    // Add role class to body for CSS-based visibility control
+    // adiciona a classe do papel ao body para controlar visibilidade por css
     document.body.className = document.body.className.replace(/role-\w+/g, '');
     document.body.classList.add(`role-${this.currentRole}`);
 
-    // Update button visibility
+    // atualiza a visibilidade dos botões
     this.updateButtonVisibility();
   }
 
   private updateButtonVisibility(): void {
-    // Create User Button
+    // botão criar utilizador
     const createUserBtn = document.getElementById('createUserBtn');
     if (createUserBtn) {
       createUserBtn.style.display = this.hasPermission('create_user') ? 'inline-block' : 'none';
     }
 
-    // Create Task Button
+    // botão criar tarefa
     const createTaskBtn = document.getElementById('createTaskBtn');
     if (createTaskBtn) {
       createTaskBtn.style.display = this.hasPermission('create_task') ? 'inline-block' : 'none';
     }
 
-    // Create Tag Button
+    // botão criar tag
     const createTagBtn = document.getElementById('createTagBtn');
     if (createTagBtn) {
       createTagBtn.style.display = this.hasPermission('create_tag') ? 'inline-block' : 'none';
     }
 
-    // Delete buttons in tables
+    // botões de apagar nas tabelas
     const deleteButtons = document.querySelectorAll('[data-action="delete"], [data-action="delete-tag"]');
     deleteButtons.forEach(btn => {
       const htmlBtn = btn as HTMLElement;
       htmlBtn.style.display = this.hasPermission('delete_task') || this.hasPermission('delete_user') || this.hasPermission('delete_tag') ? 'inline-block' : 'none';
     });
 
-    // Edit buttons in tables
+    // botões de editar nas tabelas
     const editButtons = document.querySelectorAll('[data-action="edit"]');
     editButtons.forEach(btn => {
       const htmlBtn = btn as HTMLElement;
       htmlBtn.style.display = this.hasPermission('edit_task') || this.hasPermission('edit_user') ? 'inline-block' : 'none';
     });
 
-    // Toggle status buttons
+    // botões de alternar estado
     const toggleButtons = document.querySelectorAll('[data-action="toggle-status"]');
     toggleButtons.forEach(btn => {
       const htmlBtn = btn as HTMLElement;
@@ -117,7 +117,7 @@ export class RoleManager {
     });
   }
 
-  // Force re-render UI (useful after adding new elements dynamically)
+  // força re-render da ui após adicionar novos elementos dinamicamente
   forceUIUpdate(): void {
     this.updateUIElements();
   }

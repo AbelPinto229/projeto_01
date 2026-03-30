@@ -1,7 +1,7 @@
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
 
-// Carrega as variáveis de ambiente
+// carrega as variáveis de ambiente
 dotenv.config();
 
 export const db = mysql

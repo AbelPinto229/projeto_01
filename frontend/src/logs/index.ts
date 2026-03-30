@@ -1,2 +1,2 @@
-// Barrel file - logs exports
+// ficheiro de exports dos logs
 export { SystemLogger, systemLogger } from './SystemLogger.js';

@@ -1,4 +1,4 @@
-// Comment Model
+// modelo de comentário
 export interface Comment {
   id: number;
   task_id: number;

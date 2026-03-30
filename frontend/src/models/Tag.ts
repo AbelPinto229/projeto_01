@@ -1,4 +1,4 @@
-// Tag Model
+// modelo de tag
 export interface Tag {
   id: number;
   nome: string;

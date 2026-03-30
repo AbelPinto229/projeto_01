@@ -1,3 +1,3 @@
 "use strict";
-// Barrel file - tasks exports
+// ficheiro de exports das tarefas
 //# sourceMappingURL=index.js.map

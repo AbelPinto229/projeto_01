@@ -1,6 +1,6 @@
 import * as taskService from "../services/taskService.js";
 
-// GET /tasks, GET /tasks?sort=asc|desc, GET /tasks?search=titulo
+// rotas suportadas: get /tasks, get /tasks?sort=asc|desc, get /tasks?search=titulo
 export const getTasks = async (req, res) => {
   try {
     
@@ -13,7 +13,7 @@ export const getTasks = async (req, res) => {
 }
 
 
-// cria uma nova tarefa com os dados do req.body (JSON enviado no POST)
+// cria uma nova tarefa com os dados do req.body (json enviado no post)
 export const createTask = async (req, res) => {
   try {
   
@@ -25,7 +25,7 @@ export const createTask = async (req, res) => {
   }
 }
 
-// ctualiza uma tarefa existente (parcial ou totalmente)
+// atualiza uma tarefa existente (parcial ou totalmente)
 export const updateTask = async (req, res) => {
   try {
     
@@ -41,7 +41,7 @@ export const updateTask = async (req, res) => {
 
 /**
  * deleta uma tarefa específica
- * DELETE /tasks/:id
+ * delete /tasks/:id
  */
 export const deleteTask = async (req, res) => {
   try {
@@ -57,7 +57,7 @@ export const deleteTask = async (req, res) => {
 
 /**
  * busca estatísticas agregadas das tarefas
- * Retorna: total de tarefas, concluídas, não concluídas e percentagem
+ * retorna: total de tarefas, concluídas, não concluídas e percentagem
  */
 export const getTaskStats = async (req, res) => {
   try {

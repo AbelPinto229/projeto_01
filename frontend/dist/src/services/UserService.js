@@ -3,10 +3,6 @@ export class UserService {
     constructor() {
         this.users = [];
     }
-    // carrega os utilizadores da api
-    async loadUsers(search, sort) {
-        return this.getUsers(search, sort);
-    }
     // devolve todos os utilizadores com filtros opcionais
     async getUsers(search, sort) {
         this.users = await apiGetUsers();
@@ -39,7 +35,7 @@ export class UserService {
     // cria um novo utilizador
     async createUser(user) {
         await apiCreateUser(user);
-        await this.loadUsers();
+        await this.getUsers();
     }
     // devolve um utilizador específico
     getUser(id) {
@@ -51,17 +47,17 @@ export class UserService {
     // atualiza um utilizador
     async updateUser(user) {
         await apiUpdateUser(user.id, user);
-        await this.loadUsers();
+        await this.getUsers();
     }
     // alterna o estado ativo do utilizador
     async toggleUserStatus(id) {
         await apiToggleUserStatus(id);
-        await this.loadUsers();
+        await this.getUsers();
     }
     // apaga um utilizador
     async deleteUser(id) {
         await apiDeleteUser(id);
-        await this.loadUsers();
+        await this.getUsers();
     }
 }
 //# sourceMappingURL=UserService.js.map

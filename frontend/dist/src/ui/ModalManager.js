@@ -1,3 +1,4 @@
+// abre o modal de utilizador para criação ou edição
 export function openUserModal(options) {
     const { userId, users, canEditData } = options;
     if (!canEditData)
@@ -28,6 +29,7 @@ export function closeUserModal() {
     modal.classList.remove('modal-visible');
     modal.classList.add('modal-hidden');
 }
+// abre o modal de tarefa para criação ou edição
 export function openTaskModal(options) {
     const { taskId, tasks, canEditData } = options;
     if (!canEditData)
@@ -45,6 +47,7 @@ export function openTaskModal(options) {
             document.getElementById('taskCategory').value = task.categoria;
             document.getElementById('taskResponsible').value = task.responsavelNome;
             document.getElementById('taskStatus').value = task.estado;
+            // limpa seleção anterior e aplica as tags da tarefa atual
             Array.from(select.options).forEach(option => {
                 option.selected = false;
             });
@@ -72,6 +75,7 @@ export function closeTaskModal() {
     modal.classList.remove('modal-visible');
     modal.classList.add('modal-hidden');
 }
+// fecha o modal ao clicar fora da área de conteúdo
 export function setupModalBackdropHandlers() {
     const userModal = document.getElementById('userModal');
     userModal.addEventListener('click', event => {

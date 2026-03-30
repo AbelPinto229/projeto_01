@@ -4,11 +4,6 @@ import { getUsers as apiGetUsers, createUser as apiCreateUser, updateUser as api
 export class UserService {
   private users: User[] = [];
 
-  // carrega os utilizadores da api
-  async loadUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]> {
-    return this.getUsers(search, sort);
-  }
-
   // devolve todos os utilizadores com filtros opcionais
   async getUsers(search?: string, sort?: 'asc' | 'desc'): Promise<User[]> {
     this.users = await apiGetUsers();
@@ -48,7 +43,7 @@ export class UserService {
   // cria um novo utilizador
   async createUser(user: User): Promise<void> {
     await apiCreateUser(user);
-    await this.loadUsers();
+    await this.getUsers();
   }
 
   // devolve um utilizador específico
@@ -61,19 +56,18 @@ export class UserService {
   // atualiza um utilizador
   async updateUser(user: User): Promise<void> {
     await apiUpdateUser(user.id, user);
-    await this.loadUsers();
+    await this.getUsers();
   }
 
   // alterna o estado ativo do utilizador
   async toggleUserStatus(id: number): Promise<void> {
     await apiToggleUserStatus(id);
-    await this.loadUsers();
+    await this.getUsers();
   }
 
   // apaga um utilizador
   async deleteUser(id: number): Promise<void> {
     await apiDeleteUser(id);
-    await this.loadUsers();
+    await this.getUsers();
   }
-
 }

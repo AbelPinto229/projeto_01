@@ -4,11 +4,6 @@ import { getTasks as apiGetTasks, createTask as apiCreateTask, updateTask as api
 export class TaskService {
   private tasks: Task[] = [];
 
-  // carrega as tarefas da api
-  async loadTasks(search?: string, sort?: 'asc' | 'desc'): Promise<Task[]> {
-    return this.getTasks(search, sort);
-  }
-
   // devolve todas as tarefas com filtros opcionais
   async getTasks(search?: string, sort?: 'asc' | 'desc'): Promise<Task[]> {
     this.tasks = await apiGetTasks();
@@ -46,9 +41,10 @@ export class TaskService {
   }
 
   // cria uma nova tarefa
-  async createTask(task: Task): Promise<void> {
-    await apiCreateTask(task);
-    await this.loadTasks();
+  async createTask(task: Task): Promise<Task> {
+    const created = await apiCreateTask(task);
+    await this.getTasks();
+    return created;
   }
 
   // devolve uma tarefa específica
@@ -59,24 +55,25 @@ export class TaskService {
   }
 
   // atualiza uma tarefa
-  async updateTask(task: Task): Promise<void> {
-    await apiUpdateTask(task.id, task);
-    await this.loadTasks();
+  async updateTask(task: Task): Promise<Task> {
+    const updated = await apiUpdateTask(task.id, task);
+    await this.getTasks();
+    return updated;
   }
 
   // apaga uma tarefa
   async deleteTask(id: number): Promise<void> {
     await apiDeleteTask(id);
-    await this.loadTasks();
+    await this.getTasks();
   }
 
   async addTagToTask(taskId: number, tagId: number): Promise<void> {
     await apiAddTagToTask(taskId, tagId);
-    await this.loadTasks();
+    await this.getTasks();
   }
 
   async removeTagFromTask(taskId: number, tagId: number): Promise<void> {
     await apiRemoveTagFromTask(taskId, tagId);
-    await this.loadTasks();
+    await this.getTasks();
   }
 }

@@ -1,41 +1,19 @@
-// ============================================
-// MAIN APPLICATION ENTRY POINT
-// ============================================
-
 import { UserService } from './src/services/UserService.js';
 import { TaskService } from './src/services/TaskService.js';
 import { CommentService } from './src/services/CommentService.js';
 import { TagService } from './src/services/TagService.js';
-import { UserRenderer } from './src/ui/UserRenderer.js';
-import { TaskRenderer } from './src/ui/TaskRenderer.js';
 import { openUserModal as openUserModalUI, closeUserModal as closeUserModalUI, openTaskModal as openTaskModalUI, closeTaskModal as closeTaskModalUI, setupModalBackdropHandlers } from './src/ui/ModalManager.js';
 import { roleManager } from './src/security/RoleManager.js';
 import { systemLogger } from './src/logs/SystemLogger.js';
-import { notificationService } from './src/notifications/NotificationService.js';
+import type { Comment } from './src/models/Comment.js';
 import type { Task } from './src/models/Task.js';
 import type { User } from './src/models/User.js';
 import type { Tag } from './src/models/Tag.js';
 import { canEditData as checkCanEditData, canCreateTag as checkCanCreateTag } from './src/security/permissions.js';
 
-// ============================================
-// TYPES & INTERFACES
-// ============================================
-
-interface AppState {
-  userService: UserService;
-  taskService: TaskService;
-  commentService: CommentService;
-  tagService: TagService;
-  userRenderer: UserRenderer;
-  taskRenderer: TaskRenderer;
-}
-
-// ============================================
-// DECLARE GLOBAL WINDOW TYPES
-// ============================================
+// tipa extensões do objeto global para facilitar debug manual no browser
 declare global {
   interface Window {
-    app: AppState;
     roleManager: any;
     userService: UserService;
     taskService: TaskService;
@@ -49,143 +27,73 @@ declare global {
   }
 }
 
-// ============================================
-// STATE VARIABLES
-// ============================================
-
 let currentRole: string = 'admin';
 let currentUserFilter: 'all' | 'active' | 'inactive' = 'all';
 let currentTaskFilter: 'all' | 'pending' | 'in-progress' | 'completed' = 'all';
 let taskSearchTerm = '';
 
-
-// ============================================
-// API
-// ============================================
-
-// array local para manter o estado das tasks no frontend
+// estado local usado para renderizar a interface
 let tasks: Task[] = [];
-// array local para manter o estado dos users no frontend
 let users: User[] = [];
-// array local para manter o estado das tags no frontend
 let tags: Tag[] = [];
+let currentTaskComments: Comment[] = [];
 
-// users
-// vai buscar users da api e atualiza o array local
+// recarrega utilizadores e atualiza a tabela
 async function loadUsers() {
   users = await userService.getUsers();
   renderUsers();
 }
 
-// cria user na api e depois sincroniza o array local
-async function createUser(user: User) {
-  await userService.createUser(user);
-  await loadUsers();
-}
-
-// edita user na api e depois sincroniza o array local
-async function editUser(user: User) {
-  await userService.updateUser(user);
-  await loadUsers();
-}
-
-// apaga user na api e depois sincroniza o array local
-async function deleteUser(id: number) {
-  await userService.deleteUser(id);
-  await loadUsers();
-}
-//tags
-// vai buscar tags da api e atualiza o array local
+// recarrega tags e atualiza lista e seletor
 async function loadTags() {
   tags = await tagService.getTags();
   renderTags();
 }
 
-// apaga tag na api e depois sincroniza o array local
-async function deleteTag(id: number) {
-  await tagService.deleteTag(id);
-  await loadTags();
-}
-
-//tasks
-// vai buscar da api e atualiza e renderiza o array local 
+// recarrega tarefas e atualiza tabela
 async function loadTasks() {
-  tasks = await taskService.loadTasks();
+  tasks = await taskService.getTasks();
   renderTasks();
 }
 
-// cria task na api e depois sincroniza o array local
-async function createTask(task: Task) {
-  await taskService.createTask(task);
-  await loadTasks();
-}
-
-// edita task na api e depois sincroniza o array local
-async function editTask(task: Task) {
-  await taskService.updateTask(task);
-  await loadTasks();
-}
-
-// apaga task na api e depois sincroniza o array local
-async function deleteTask(id: number) {
-  await taskService.deleteTask(id);
-  await loadTasks();
-}
-
-// ============================================
-// INITIALIZE SERVICES
-// ============================================
 const userService = new UserService();
 const taskService = new TaskService();
 const commentService = new CommentService();
 const tagService = new TagService();
-const userRenderer = new UserRenderer();
-const taskRenderer = new TaskRenderer();
 
-const appState: AppState = {
-  userService,
-  taskService,
-  commentService,
-  tagService,
-  userRenderer,
-  taskRenderer
-};
-
-// ============================================
-// EXPOSE TO GLOBAL WINDOW
-// ============================================
-window.app = appState;
+// expõe serviços para inspeção no devtools
 window.roleManager = roleManager;
 window.userService = userService;
 window.taskService = taskService;
 window.tagService = tagService;
 window.systemLogger = systemLogger;
 
-// ============================================
-// MODAL FUNCTIONS
-// ============================================
-
+// abre modal de utilizador (novo ou edição)
 function openUserModal(userId?: number): void {
   openUserModalUI({ userId, users, canEditData: checkCanEditData(currentRole) });
 }
 
+// fecha modal de utilizador
 function closeUserModal(): void {
   closeUserModalUI();
 }
 
 function openTaskModal(taskId?: number): void {
+  // abre modal com dados atuais da tarefa selecionada
   openTaskModalUI({ taskId, tasks, canEditData: checkCanEditData(currentRole) });
+  // ao abrir modal, sincroniza comentários da tarefa selecionada
+  void syncTaskComments(taskId);
 }
 
 function closeTaskModal(): void {
+  // limpa comentários em memória para evitar fuga de contexto entre tarefas
+  currentTaskComments = [];
+  renderTaskComments();
   closeTaskModalUI();
 }
 
-// ============================================
-// RENDER FUNCTIONS
-// ============================================
-
 function getTagColor(name: string): string {
+  // garante sempre a mesma cor para o mesmo nome de tag
   const palette = ['#ff6b6b', '#ff8787', '#4c6ef5', '#15aabf', '#ffd43b', '#a78bfa', '#ff922b', '#63e6be', '#ffb3ba', '#ff8fab'];
   let hash = 0;
 
@@ -197,7 +105,22 @@ function getTagColor(name: string): string {
   return palette[Math.abs(hash) % palette.length];
 }
 
+// formata datas iso para formato local com horas e minutos
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleString('pt-PT', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 function updateUserFilterButtonsUI(filter: 'all' | 'active' | 'inactive'): void {
+  // ativa visualmente apenas o filtro atual
   document.querySelectorAll('.user-filter-btn').forEach(button => {
     const element = button as HTMLButtonElement;
     const status = element.getAttribute('data-status');
@@ -206,6 +129,7 @@ function updateUserFilterButtonsUI(filter: 'all' | 'active' | 'inactive'): void 
 }
 
 function updateTaskFilterButtonsUI(filter: 'all' | 'pending' | 'in-progress' | 'completed'): void {
+  // ativa visualmente apenas o filtro atual
   document.querySelectorAll('.task-filter-btn').forEach(button => {
     const element = button as HTMLButtonElement;
     const status = element.getAttribute('data-status');
@@ -214,6 +138,7 @@ function updateTaskFilterButtonsUI(filter: 'all' | 'pending' | 'in-progress' | '
 }
 
 function populateTaskTagsDropdown(): void {
+  // repovoa o seletor múltiplo de tags mantendo a primeira opção fixa
   const select = document.getElementById('taskTagsSelect') as HTMLSelectElement | null;
   if (!select) return;
 
@@ -230,10 +155,12 @@ function populateTaskTagsDropdown(): void {
 }
 
 function renderUsers(): void {
+  // desenha a tabela de utilizadores com base no filtro selecionado
   const tbody = document.querySelector('#userTable tbody') as HTMLTableSectionElement | null;
   if (!tbody) return;
 
   const filteredUsers = users.filter(user => {
+    // aplica filtro de estado ativo/inativo sem pedir dados novamente
     if (currentUserFilter === 'active') return user.active;
     if (currentUserFilter === 'inactive') return !user.active;
     return true;
@@ -253,6 +180,7 @@ function renderUsers(): void {
   }
 
   filteredUsers.forEach(user => {
+    // cria uma linha completa para cada utilizador
     const row = document.createElement('tr');
     row.className = 'table-row';
 
@@ -269,10 +197,11 @@ function renderUsers(): void {
     statusCell.appendChild(statusBadge);
 
     const createdAtCell = document.createElement('td');
-    createdAtCell.textContent = user.created_at;
+    createdAtCell.textContent = formatDateTime(user.created_at);
 
     const actionCell = document.createElement('td');
     if (checkCanEditData(currentRole)) {
+      // só perfis com permissão podem editar/apagar
       const editButton = document.createElement('button');
       editButton.className = 'action-btn';
       editButton.textContent = 'Editar';
@@ -282,7 +211,8 @@ function renderUsers(): void {
       deleteButton.className = 'action-btn';
       deleteButton.textContent = 'Apagar';
       deleteButton.addEventListener('click', async () => {
-        await deleteUser(user.id);
+        await userService.deleteUser(user.id);
+        await loadUsers();
       });
 
       actionCell.appendChild(editButton);
@@ -306,6 +236,7 @@ function renderUsers(): void {
 }
 
 function setupUserControls(): void {
+  // liga os botões de filtro de utilizadores
   document.querySelectorAll('.user-filter-btn').forEach(button => {
     button.addEventListener('click', (event) => {
       const target = event.currentTarget as HTMLButtonElement;
@@ -313,6 +244,7 @@ function setupUserControls(): void {
       if (!status) return;
 
       currentUserFilter = status;
+      // atualiza interface imediatamente sem roundtrip à api
       updateUserFilterButtonsUI(currentUserFilter);
       renderUsers();
     });
@@ -322,14 +254,17 @@ function setupUserControls(): void {
 }
 
 function renderTasks(): void {
+  // desenha a tabela de tarefas com pesquisa e filtro por estado
   const tbody = document.querySelector('#taskTable tbody') as HTMLTableSectionElement | null;
   if (!tbody) return;
 
   const term = taskSearchTerm.trim().toLowerCase();
   const filteredTasks = tasks.filter(task => {
+    // primeiro filtro por estado
     if (currentTaskFilter !== 'all' && task.estado !== currentTaskFilter) return false;
     if (!term) return true;
 
+    // depois filtro por texto em campos relevantes
     const searchable = `${task.titulo} ${task.categoria} ${task.responsavelNome}`.toLowerCase();
     return searchable.includes(term);
   });
@@ -348,6 +283,7 @@ function renderTasks(): void {
   }
 
   filteredTasks.forEach(task => {
+    // cria linha da tarefa com colunas e ações
     const row = document.createElement('tr');
     row.className = 'table-row';
 
@@ -365,6 +301,7 @@ function renderTasks(): void {
     if (taskTagNames.length === 0) {
       tagsCell.textContent = '-';
     } else {
+      // mostra cada tag como badge colorido
       taskTagNames.forEach(tagName => {
         const badge = document.createElement('span');
         badge.className = 'status-badge';
@@ -383,10 +320,11 @@ function renderTasks(): void {
     statusCell.appendChild(statusBadge);
 
     const createdAtCell = document.createElement('td');
-    createdAtCell.textContent = task.created_at;
+    createdAtCell.textContent = formatDateTime(task.created_at);
 
     const actionCell = document.createElement('td');
     if (checkCanEditData(currentRole)) {
+      // ações só disponíveis para quem pode editar dados
       const editButton = document.createElement('button');
       editButton.className = 'action-btn';
       editButton.textContent = 'Editar';
@@ -396,7 +334,8 @@ function renderTasks(): void {
       deleteButton.className = 'action-btn';
       deleteButton.textContent = 'Apagar';
       deleteButton.addEventListener('click', async () => {
-        await deleteTask(task.id);
+        await taskService.deleteTask(task.id);
+        await loadTasks();
       });
 
       actionCell.appendChild(editButton);
@@ -422,6 +361,7 @@ function renderTasks(): void {
 }
 
 function setupTaskControls(): void {
+  // liga caixa de pesquisa para filtrar em tempo real
   const searchInput = document.getElementById('taskSearchInput') as HTMLInputElement | null;
   if (searchInput) {
     searchInput.addEventListener('input', () => {
@@ -431,6 +371,7 @@ function setupTaskControls(): void {
   }
 
   document.querySelectorAll('.task-filter-btn').forEach(button => {
+    // liga botões de filtro por estado
     button.addEventListener('click', (event) => {
       const target = event.currentTarget as HTMLButtonElement;
       const status = target.getAttribute('data-status') as 'all' | 'pending' | 'in-progress' | 'completed' | null;
@@ -446,6 +387,7 @@ function setupTaskControls(): void {
 }
 
 function renderTags(): void {
+  // renderiza lista de tags e permite apagar por clique quando permitido
   const tagsList = document.getElementById('tagsList') as HTMLDivElement | null;
   if (!tagsList) return;
 
@@ -453,6 +395,7 @@ function renderTags(): void {
   tagsList.textContent = '';
 
   tags.forEach(tag => {
+    // cada tag é mostrada como badge com cor determinística
     const badge = document.createElement('span');
     badge.className = 'status-badge';
     badge.style.backgroundColor = getTagColor(tag.nome);
@@ -460,10 +403,12 @@ function renderTags(): void {
     badge.textContent = tag.nome;
 
     if (canManageTags) {
+      // clique na badge remove a tag
       badge.style.cursor = 'pointer';
       badge.title = 'Clique para apagar esta tag';
       badge.addEventListener('click', async () => {
-        await deleteTag(tag.id);
+        await tagService.deleteTag(tag.id);
+        await loadTags();
       });
     }
 
@@ -473,7 +418,178 @@ function renderTags(): void {
   populateTaskTagsDropdown();
 }
 
+function renderTaskComments(): void {
+  // mostra/oculta a secção e renderiza comentários da tarefa ativa
+  const section = document.getElementById('taskCommentsSection') as HTMLDivElement | null;
+  const list = document.getElementById('taskCommentsList') as HTMLDivElement | null;
+  const input = document.getElementById('taskCommentInput') as HTMLTextAreaElement | null;
+  const addButton = document.getElementById('addTaskCommentBtn') as HTMLButtonElement | null;
+  const taskId = (document.getElementById('taskId') as HTMLInputElement | null)?.value;
+  const canEdit = checkCanEditData(currentRole);
+
+  if (!section || !list || !input || !addButton) return;
+
+  if (!taskId) {
+    // no modo criar tarefa, secção de comentários fica escondida
+    section.classList.add('comments-hidden');
+    list.textContent = '';
+    input.value = '';
+    input.disabled = true;
+    addButton.disabled = true;
+    return;
+  }
+
+  section.classList.remove('comments-hidden');
+  input.disabled = !canEdit;
+  addButton.disabled = !canEdit;
+  list.textContent = '';
+
+  if (currentTaskComments.length === 0) {
+    // estado vazio quando não existem comentários
+    const empty = document.createElement('div');
+    empty.className = 'comment-card';
+    empty.textContent = 'Sem comentários nesta tarefa.';
+    list.appendChild(empty);
+    return;
+  }
+
+  currentTaskComments.forEach(comment => {
+    // renderiza cartão do comentário com metadados e ações
+    const item = document.createElement('div');
+    item.className = 'comment-card';
+
+    const header = document.createElement('div');
+    header.className = 'comment-header';
+
+    const meta = document.createElement('div');
+    meta.className = 'comment-meta';
+    const author = users.find(user => user.id === comment.user_id)?.name || `User ${comment.user_id}`;
+    meta.textContent = `${author} · ${formatDateTime(comment.dataCriacao)}`;
+
+    header.appendChild(meta);
+
+    if (canEdit) {
+      // editar/apagar comentário só para perfis com permissão
+      const actions = document.createElement('div');
+      actions.className = 'comment-actions-inline';
+
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.className = 'comment-action-btn';
+      editButton.textContent = 'Editar';
+      editButton.addEventListener('click', async () => {
+        await editCommentFromTask(comment.id, comment.conteudo);
+      });
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'comment-action-btn comment-delete-btn';
+      deleteButton.textContent = 'Apagar';
+      deleteButton.addEventListener('click', async () => {
+        await deleteCommentFromTask(comment.id);
+      });
+
+      actions.appendChild(editButton);
+      actions.appendChild(deleteButton);
+      header.appendChild(actions);
+    }
+
+    const text = document.createElement('p');
+    text.className = 'comment-text';
+    text.textContent = comment.conteudo;
+
+    item.appendChild(header);
+    item.appendChild(text);
+    list.appendChild(item);
+  });
+}
+
+async function syncTaskComments(taskId?: number): Promise<void> {
+  // sincroniza lista local de comentários para a tarefa ativa
+  const input = document.getElementById('taskCommentInput') as HTMLTextAreaElement | null;
+
+  if (!taskId) {
+    currentTaskComments = [];
+    if (input) input.value = '';
+    renderTaskComments();
+    return;
+  }
+
+  try {
+    // lê comentários mais recentes da api
+    currentTaskComments = await commentService.getCommentsByTask(taskId);
+  } catch (error) {
+    console.error('erro ao carregar comentarios da task:', error);
+    currentTaskComments = [];
+  }
+
+  if (input) input.value = '';
+  renderTaskComments();
+}
+
+async function addCommentToCurrentTask(): Promise<void> {
+  // cria comentário e recarrega lista para refletir estado real
+  const taskId = Number((document.getElementById('taskId') as HTMLInputElement).value);
+  const commentInput = document.getElementById('taskCommentInput') as HTMLTextAreaElement | null;
+  const responsibleName = (document.getElementById('taskResponsible') as HTMLInputElement | null)?.value;
+
+  if (!taskId || !commentInput) return;
+
+  const conteudo = commentInput.value.trim();
+  if (!conteudo) return;
+
+  const userId = users.find(user => user.name === responsibleName)?.id ?? users.find(user => user.active)?.id ?? users[0]?.id;
+  // tenta resolver autor pelo responsável da tarefa; fallback para utilizador ativo
+  if (!userId) {
+    alert('Nao foi possivel determinar o utilizador do comentario');
+    return;
+  }
+
+  try {
+    await commentService.createComment(taskId, userId, conteudo);
+    currentTaskComments = await commentService.getCommentsByTask(taskId);
+    commentInput.value = '';
+    renderTaskComments();
+  } catch (error) {
+    console.error('erro ao criar comentario na task:', error);
+  }
+}
+
+async function editCommentFromTask(commentId: number, currentContent: string): Promise<void> {
+  // pede novo texto e atualiza comentário na api
+  const taskId = Number((document.getElementById('taskId') as HTMLInputElement).value);
+  if (!taskId) return;
+
+  const nextContent = prompt('Editar comentário', currentContent)?.trim();
+  if (!nextContent || nextContent === currentContent) return;
+
+  try {
+    await commentService.updateComment(taskId, commentId, nextContent);
+    currentTaskComments = await commentService.getCommentsByTask(taskId);
+    renderTaskComments();
+  } catch (error) {
+    console.error('erro ao editar comentario da task:', error);
+  }
+}
+
+async function deleteCommentFromTask(commentId: number): Promise<void> {
+  // confirma com o utilizador e remove comentário
+  const taskId = Number((document.getElementById('taskId') as HTMLInputElement).value);
+  if (!taskId) return;
+
+  if (!confirm('Queres apagar este comentário?')) return;
+
+  try {
+    await commentService.deleteComment(taskId, commentId);
+    currentTaskComments = await commentService.getCommentsByTask(taskId);
+    renderTaskComments();
+  } catch (error) {
+    console.error('erro ao apagar comentario da task:', error);
+  }
+}
+
 async function createTagFromInput(): Promise<void> {
+  // valida permissões e evita duplicados antes de criar
   if (!checkCanCreateTag(currentRole)) {
     return;
   }
@@ -493,10 +609,8 @@ async function createTagFromInput(): Promise<void> {
     return;
   }
 
-  const newId = Math.max(...tags.map(t => t.id), 0) + 1;
-
   try {
-    await tagService.createTag({ id: newId, nome: tagName, created_at: new Date().toISOString().split('T')[0] });
+    await tagService.createTag({ id: 0, nome: tagName, created_at: new Date().toISOString().split('T')[0] });
     await loadTags();
   } catch (error) {
     console.error('erro ao criar tag na api:', error);
@@ -506,14 +620,13 @@ async function createTagFromInput(): Promise<void> {
   input.value = '';
 }
 
-// ============================================
-// STATISTICS
-// ============================================
-
 function updateStats(): void {
+  // recalcula estatísticas visíveis no dashboard
+  // bloco de elementos dos cartões de utilizadores
   const totalUsersEl = document.getElementById('totalUsers') as HTMLElement;
   const activeUsersEl = document.getElementById('activeUsers') as HTMLElement;
   const percentageEl = document.getElementById('activePercentage') as HTMLElement;
+  // bloco de elementos dos cartões de tarefas
   const totalTasksEl = document.getElementById('totalTasks') as HTMLElement;
   const completedTasksEl = document.getElementById('completedTasks') as HTMLElement;
   const pendingTasksEl = document.getElementById('pendingTasks') as HTMLElement;
@@ -529,11 +642,8 @@ function updateStats(): void {
   pendingTasksEl.textContent = tasks.filter(t => !t.concluida).length.toString();
 }
 
-// ============================================
-// ROLE MANAGEMENT
-// ============================================
-
 function updateRoleUI(): void {
+  // aplica visibilidade de ações com base no papel atual
   const currentRoleEl = document.getElementById('currentRole') as HTMLElement;
   currentRoleEl.textContent = currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
   
@@ -546,6 +656,7 @@ function updateRoleUI(): void {
 
   const allowedButtons = permissions[currentRole] || [];
   
+  // aplica visibilidade dos botões principais conforme permissões
   ['createUserBtn', 'createTaskBtn', 'createTagBtn'].forEach(id => {
     const btn = document.getElementById(id) as HTMLButtonElement;
     if (btn) {
@@ -555,6 +666,7 @@ function updateRoleUI(): void {
 
   const tagInput = document.getElementById('newTagName') as HTMLInputElement | null;
   if (tagInput) {
+    // configura estado visual e interação do input de tags
     const canCreate = checkCanCreateTag(currentRole);
     tagInput.disabled = !canCreate;
     tagInput.placeholder = canCreate ? 'Nova tag' : 'Sem permissao para criar tag';
@@ -564,47 +676,32 @@ function updateRoleUI(): void {
 }
 
 window.setRole = function(role: string): void {
+  // ponto de entrada global para trocar papel em runtime
   currentRole = role;
   updateRoleUI();
   renderUsers();
   renderTasks();
 };
 
-// ============================================
-// INITIALIZATION
-// ============================================
-
 document.addEventListener('DOMContentLoaded', async () => {
+  // liga eventos base da interface
   setupUserControls();
   setupTaskControls();
   updateRoleUI();
-  
-  // Create User Button
+
+  // bloco de ações de criação no topo
   const createUserBtn = document.getElementById('createUserBtn') as HTMLButtonElement | null;
-  if (createUserBtn) {
-    createUserBtn.addEventListener('click', () => {
-      openUserModal();
-    });
-  }
-  
-  // Create Task Button
+  createUserBtn?.addEventListener('click', () => { openUserModal(); });
+
   const createTaskBtn = document.getElementById('createTaskBtn') as HTMLButtonElement | null;
-  if (createTaskBtn) {
-    createTaskBtn.addEventListener('click', () => {
-      openTaskModal();
-    });
-  }
-  
-  // Create Tag Button
+  createTaskBtn?.addEventListener('click', () => { openTaskModal(); });
+
   const createTagBtn = document.getElementById('createTagBtn') as HTMLButtonElement | null;
-  if (createTagBtn) {
-    createTagBtn.addEventListener('click', async () => {
-      await createTagFromInput();
-    });
-  }
+  createTagBtn?.addEventListener('click', async () => { await createTagFromInput(); });
 
   const newTagInput = document.getElementById('newTagName') as HTMLInputElement | null;
   if (newTagInput) {
+    // permite criar tag com enter
     newTagInput.addEventListener('keydown', async (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -613,14 +710,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // botão de adicionar comentário no modal de tarefa
+  const addTaskCommentBtn = document.getElementById('addTaskCommentBtn') as HTMLButtonElement | null;
+  addTaskCommentBtn?.addEventListener('click', async () => { await addCommentToCurrentTask(); });
+
   try {
+    // carrega dados essenciais em paralelo no arranque
     await Promise.all([loadUsers(), loadTasks(), loadTags()]);
     updateStats();
   } catch (error) {
     console.error('erro ao carregar dados iniciais da api:', error);
   }
-  
-  // User Form Submit
+
+  // formulário de utilizador (novo/editar)
   const userForm = document.getElementById('userForm') as HTMLFormElement;
   userForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -636,13 +738,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const status = (document.getElementById('userStatus') as HTMLSelectElement).value as 'active' | 'inactive';
     const createdAt = new Date().toISOString().split('T')[0];
     
+    // cria ou atualiza utilizador e recarrega a lista
     try {
       if (id) {
-        await editUser({ id: parseInt(id, 10), name, email, active: status === 'active', created_at: createdAt });
+        await userService.updateUser({ id: parseInt(id, 10), name, email, active: status === 'active', created_at: createdAt });
       } else {
-        const newId = Math.max(...users.map(u => u.id), 0) + 1;
-        await createUser({ id: newId, name, email, active: status === 'active', created_at: createdAt });
+        await userService.createUser({ id: 0, name, email, active: status === 'active', created_at: createdAt });
       }
+
+      await loadUsers();
     } catch (error) {
       console.error('erro ao sincronizar user com a api:', error);
       return;
@@ -650,8 +754,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     closeUserModal();
   });
-  
-  // Task Form Submit
+
+  // formulário de tarefa (novo/editar)
   const taskForm = document.getElementById('taskForm') as HTMLFormElement;
   taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -672,13 +776,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const createdAt = new Date().toISOString().split('T')[0];
     let taskIdForTags: number;
     
+    // cria ou atualiza tarefa, depois sincroniza associação de tags
     try {
       if (id) {
         taskIdForTags = parseInt(id, 10);
-        await editTask({ id: taskIdForTags, titulo: title, categoria: category, estado: status, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+        await taskService.updateTask({ id: taskIdForTags, titulo: title, categoria: category, estado: status, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
       } else {
-        const nextId = Math.max(...tasks.map(t => t.id), 0) + 1;
-        await createTask({ id: nextId, titulo: title, categoria: category, estado: status, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+        await taskService.createTask({ id: 0, titulo: title, categoria: category, estado: status, responsavelNome: responsible, concluida: status === 'completed', dataConclusao: status === 'completed' ? createdAt : null, created_at: createdAt });
+        await loadTasks();
         taskIdForTags = Math.max(...tasks.map(t => t.id), 0);
       }
 
@@ -686,6 +791,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .filter(tag => selectedTags.includes(tag.nome))
         .map(tag => tag.id);
 
+      // calcula diferenças para adicionar/remover apenas o necessário
       const existingTagIds = tasks.find(task => task.id === taskIdForTags)?.tagIds || [];
 
       const tagIdsToAdd = selectedTagIds.filter(tagId => !existingTagIds.includes(tagId));
@@ -695,7 +801,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
           await taskService.addTagToTask(taskIdForTags, tagId);
         } catch (tagError) {
-          // pode falhar se a relação já existir; continua com as restantes
           console.warn('aviso ao associar tag na task:', tagError);
         }
       }
@@ -719,10 +824,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   setupModalBackdropHandlers();
 
+  // expõe ações de modal para uso em html inline e debug
   window.openUserModal = openUserModal;
   window.closeUserModal = closeUserModal;
   window.openTaskModal = openTaskModal;
   window.closeTaskModal = closeTaskModal;
 });
-
-

@@ -356,6 +356,82 @@ body {
   gap: 8px;
 }
 
+.comments-hidden {
+  display: none;
+}
+
+.comments-section {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.comment-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.comment-meta {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.comment-actions-inline {
+  display: flex;
+  gap: 6px;
+}
+
+.comment-action-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.comment-delete-btn {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.comment-text {
+  margin: 0;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.comments-input {
+  resize: vertical;
+}
+
+.comments-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 960px) {
   .stats-grid {
     grid-template-columns: 1fr;

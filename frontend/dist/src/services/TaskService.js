@@ -3,10 +3,6 @@ export class TaskService {
     constructor() {
         this.tasks = [];
     }
-    // carrega as tarefas da api
-    async loadTasks(search, sort) {
-        return this.getTasks(search, sort);
-    }
     // devolve todas as tarefas com filtros opcionais
     async getTasks(search, sort) {
         this.tasks = await apiGetTasks();
@@ -38,8 +34,9 @@ export class TaskService {
     }
     // cria uma nova tarefa
     async createTask(task) {
-        await apiCreateTask(task);
-        await this.loadTasks();
+        const created = await apiCreateTask(task);
+        await this.getTasks();
+        return created;
     }
     // devolve uma tarefa específica
     getTask(id) {
@@ -50,21 +47,22 @@ export class TaskService {
     }
     // atualiza uma tarefa
     async updateTask(task) {
-        await apiUpdateTask(task.id, task);
-        await this.loadTasks();
+        const updated = await apiUpdateTask(task.id, task);
+        await this.getTasks();
+        return updated;
     }
     // apaga uma tarefa
     async deleteTask(id) {
         await apiDeleteTask(id);
-        await this.loadTasks();
+        await this.getTasks();
     }
     async addTagToTask(taskId, tagId) {
         await apiAddTagToTask(taskId, tagId);
-        await this.loadTasks();
+        await this.getTasks();
     }
     async removeTagFromTask(taskId, tagId) {
         await apiRemoveTagFromTask(taskId, tagId);
-        await this.loadTasks();
+        await this.getTasks();
     }
 }
 //# sourceMappingURL=TaskService.js.map

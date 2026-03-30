@@ -1,6 +1,6 @@
 import { TaskService } from '../services/TaskService.js';
 import { TaskUtils } from '../utils/index.js';
-// FAKE TAGS FOR DISPLAY
+// tags fictícias para apresentação
 const taskTags = new Map([
     [1, ['Feature', 'Backend']],
     [2, ['Frontend', 'Design']],

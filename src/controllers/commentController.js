@@ -22,10 +22,10 @@ export const createComment = async (req, res) => {
     
     const comment = await commentService.createComment(Number(req.params.id), req.body);
     
-    // Retorna o comentário criado com status 201 (Created)
+    // retorna o comentário criado com status 201 (created)
     res.status(201).json(comment);
   } catch (error) {
-    // Erro 400 (Bad Request) se os dados forem inválidos
+    // erro 400 (bad request) se os dados forem inválidos
     res.status(400).json({ error: "DEU ERRO CHAVALO, NA DEU, TENTA DEPOIS" });
   }
 }

@@ -1,7 +1,7 @@
 import { db } from "../db.js";
 
-// Middleware que verifica se existe um usuário com o id fornecido na URL.
-// Se existir, adiciona o objeto do usuário em req.user; senão, retorna erro 404.
+// middleware que verifica se existe um usuário com o id fornecido na url.
+// se existir, adiciona o objeto do usuário em req.user; senão, retorna erro 404.
 export const checkUserExists = async (req, res, next) => {
   try {
     const userId = Number(req.params.id);
