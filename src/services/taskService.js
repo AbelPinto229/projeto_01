@@ -38,7 +38,60 @@ export const getTasks = async (query = {}) => {
   }
 
   const [rows] = await db.query(sql, params);
-  return rows;
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  // segunda query: busca tags apenas para as tarefas retornadas no filtro atual
+  const taskIds = rows.map((task) => task.id);
+  const placeholders = taskIds.map(() => '?').join(', ');
+
+  const [tagRows] = await db.query(
+    `
+      SELECT
+        task_tags.task_id,
+        tags.id AS tag_id,
+        tags.nome AS tag_nome
+      FROM task_tags
+      INNER JOIN tags ON tags.id = task_tags.tag_id
+      WHERE task_tags.task_id IN (${placeholders})
+      ORDER BY tags.nome ASC
+    `,
+    taskIds
+  );
+
+  // agrupa tags por task_id para montar a resposta final sem dependência de GROUP_CONCAT
+  const tagsByTaskId = tagRows.reduce((map, row) => {
+    const current = map.get(row.task_id);
+
+    if (current) {
+      current.tags.push(row.tag_nome);
+      current.tagIds.push(row.tag_id);
+      return map;
+    }
+
+    map.set(row.task_id, {
+      tags: [row.tag_nome],
+      tagIds: [row.tag_id]
+    });
+
+    return map;
+  }, new Map());
+
+  // devolve cada tarefa já com lista de nomes e ids de tags associadas
+  return rows.map((task) => ({
+    id: task.id,
+    titulo: task.titulo,
+    categoria: task.categoria,
+    estado: task.estado,
+    concluida: Boolean(task.concluida),
+    responsavelNome: task.responsavelNome,
+    dataConclusao: task.dataConclusao,
+    created_at: task.created_at,
+    tags: tagsByTaskId.get(task.id)?.tags ?? [],
+    tagIds: tagsByTaskId.get(task.id)?.tagIds ?? []
+  }));
 };
 
 
