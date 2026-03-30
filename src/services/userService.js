@@ -33,11 +33,9 @@ export const createUser = async (data) => {
     'INSERT INTO users (name, email, active) VALUES (?, ?, ?)',
     [data.name, data.email, data.active ?? true]
   );
-  return {
-    id: result.insertId,
-    ...data,
-    active: data.active ?? true
-  };
+
+  const [created] = await db.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
+  return created[0];
 };
 
 // executa uma função assíncrona que atualiza parcial ou totalmente um usuário pelo ID
@@ -112,10 +110,14 @@ export const getUserStats = async () => {
     FROM users
   `);
   const { total, ativos } = rows[0];
-  const percentagemAtivos = total > 0 ? ((ativos / total) * 100).toFixed(2) : 0;
+  const active = Number(ativos) || 0;
+  const inactive = Number(total) - active;
+  const percentage = Number(total) > 0 ? Number(((active / Number(total)) * 100).toFixed(2)) : 0;
+
   return {
-    total,
-    ativos,
-    percentagemAtivos: `${percentagemAtivos}%`
+    total: Number(total),
+    active,
+    inactive,
+    percentage
   };
 };

@@ -76,8 +76,8 @@ export const getTaskStats = async (req, res) => {
  */
 export const getTasksByUserId = async (req, res) => {
   try {
-    
-    const tasks = await taskService.getTasksByUserId(Number(req.params.id));
+    const userId = req.user?.id ?? Number(req.params.id);
+    const tasks = await taskService.getTasksByUserId(userId);
     
     res.json(tasks);
   } catch (error) {
