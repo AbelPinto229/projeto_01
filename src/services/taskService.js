@@ -21,12 +21,8 @@ export const getTasks = async (query = {}) => {
       tasks.concluida,
       tasks.responsavelNome,
       tasks.dataConclusao,
-      tasks.created_at,
-      GROUP_CONCAT(DISTINCT task_tags.tag_id ORDER BY task_tags.tag_id SEPARATOR ',') AS tagIdsCsv,
-      GROUP_CONCAT(DISTINCT tags.nome ORDER BY tags.nome SEPARATOR ',') AS tagNamesCsv
+      tasks.created_at
     FROM tasks
-    LEFT JOIN task_tags ON task_tags.task_id = tasks.id
-    LEFT JOIN tags ON tags.id = task_tags.tag_id
   `;
   const params = []; 
 
@@ -35,18 +31,6 @@ export const getTasks = async (query = {}) => {
     params.push(`%${query.search}%`);
   }
 
-  sql += `
-    GROUP BY
-      tasks.id,
-      tasks.titulo,
-      tasks.categoria,
-      tasks.estado,
-      tasks.concluida,
-      tasks.responsavelNome,
-      tasks.dataConclusao,
-      tasks.created_at
-  `;
-
   if (query.sort === 'asc') {
     sql += ' ORDER BY tasks.titulo ASC';
   } else if (query.sort === 'desc') {
@@ -54,27 +38,7 @@ export const getTasks = async (query = {}) => {
   }
 
   const [rows] = await db.query(sql, params);
-  return rows.map((row) => {
-    const tagIds = row.tagIdsCsv
-      ? row.tagIdsCsv.split(',').map((value) => Number(value))
-      : [];
-    const tags = row.tagNamesCsv
-      ? row.tagNamesCsv.split(',')
-      : [];
-
-    return {
-      id: row.id,
-      titulo: row.titulo,
-      categoria: row.categoria,
-      estado: row.estado,
-      concluida: row.concluida,
-      responsavelNome: row.responsavelNome,
-      dataConclusao: row.dataConclusao,
-      created_at: row.created_at,
-      tagIds,
-      tags
-    };
-  });
+  return rows;
 };
 
 

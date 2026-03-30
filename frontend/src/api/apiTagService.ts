@@ -7,7 +7,13 @@ const BASE_URL = 'http://localhost:3000';
 export async function getTags(): Promise<Tag[]> {
   const res = await fetch(`${BASE_URL}/tags`);
   if (!res.ok) throw new Error('Erro ao buscar tags');
-  return res.json() as Promise<Tag[]>;
+
+  const data = (await res.json()) as Tag[];
+  return data.map((item) => ({
+    id: item.id,
+    nome: item.nome,
+    created_at: item.created_at
+  }));
 }
 
 // cria uma nova tag
@@ -18,7 +24,15 @@ export async function createTag(tag: Tag): Promise<Tag> {
     body: JSON.stringify(tag)
   });
   if (!res.ok) throw new Error('Erro ao criar tag');
-  return res.json() as Promise<Tag>;
+
+  const data = (await res.json()) as Tag;
+  const newTag: Tag = {
+    id: data.id,
+    nome: data.nome,
+    created_at: data.created_at
+  };
+
+  return newTag;
 }
 
 // apaga uma tag pelo id
@@ -36,5 +50,18 @@ export async function deleteTag(id: number): Promise<void> {
 export async function getTasksForTag(id: number): Promise<Task[]> {
   const res = await fetch(`${BASE_URL}/tags/${id}/tasks`);
   if (!res.ok) throw new Error('Erro ao buscar tasks da tag');
-  return res.json() as Promise<Task[]>;
+
+  const data = (await res.json()) as Task[];
+  return data.map((item) => ({
+    id: item.id,
+    titulo: item.titulo,
+    categoria: item.categoria,
+    estado: item.estado,
+    concluida: item.concluida,
+    responsavelNome: item.responsavelNome,
+    dataConclusao: item.dataConclusao,
+    created_at: item.created_at,
+    tags: item.tags,
+    tagIds: item.tagIds
+  }));
 }

@@ -4,7 +4,14 @@ export async function getUsers() {
     const res = await fetch(`${BASE_URL}/users`);
     if (!res.ok)
         throw new Error('Erro ao buscar users');
-    return res.json();
+    const data = (await res.json());
+    return data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        active: item.active,
+        created_at: item.created_at
+    }));
 }
 // cria um novo utilizador
 export async function createUser(user) {
@@ -15,7 +22,15 @@ export async function createUser(user) {
     });
     if (!res.ok)
         throw new Error('Erro ao criar user');
-    return res.json();
+    const data = (await res.json());
+    const newUser = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        active: data.active,
+        created_at: data.created_at
+    };
+    return newUser;
 }
 // atualiza um utilizador pelo id
 export async function updateUser(id, user) {
@@ -26,14 +41,30 @@ export async function updateUser(id, user) {
     });
     if (!res.ok)
         throw new Error('Erro ao atualizar user');
-    return res.json();
+    const data = (await res.json());
+    const newUser = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        active: data.active,
+        created_at: data.created_at
+    };
+    return newUser;
 }
 // alterna o estado do utilizador
 export async function toggleUserStatus(id) {
     const res = await fetch(`${BASE_URL}/users/${id}`, { method: 'PATCH' });
     if (!res.ok)
         throw new Error('Erro ao alternar status do user');
-    return res.json();
+    const data = (await res.json());
+    const updatedUser = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        active: data.active,
+        created_at: data.created_at
+    };
+    return updatedUser;
 }
 // apaga um utilizador pelo id
 export async function deleteUser(id) {
@@ -49,13 +80,32 @@ export async function getUserStats() {
     const res = await fetch(`${BASE_URL}/users/stats`);
     if (!res.ok)
         throw new Error('Erro ao buscar estatisticas de users');
-    return res.json();
+    const data = (await res.json());
+    const stats = {
+        total: data.total,
+        active: data.active,
+        inactive: data.inactive,
+        percentage: data.percentage
+    };
+    return stats;
 }
 // vai buscar as tarefas de um utilizador
 export async function getUserTasks(id) {
     const res = await fetch(`${BASE_URL}/users/${id}/tasks`);
     if (!res.ok)
         throw new Error('Erro ao buscar tasks do user');
-    return res.json();
+    const data = (await res.json());
+    return data.map((item) => ({
+        id: item.id,
+        titulo: item.titulo,
+        categoria: item.categoria,
+        estado: item.estado,
+        concluida: item.concluida,
+        responsavelNome: item.responsavelNome,
+        dataConclusao: item.dataConclusao,
+        created_at: item.created_at,
+        tags: item.tags,
+        tagIds: item.tagIds
+    }));
 }
 //# sourceMappingURL=apiUserService.js.map

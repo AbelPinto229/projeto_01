@@ -7,7 +7,20 @@ const BASE_URL = 'http://localhost:3000';
 export async function getTasks(): Promise<Task[]> {
   const res = await fetch(`${BASE_URL}/tasks`);
   if (!res.ok) throw new Error('Erro ao buscar tasks');
-  return res.json() as Promise<Task[]>;
+
+  const data = (await res.json()) as Task[];
+  return data.map((item) => ({
+    id: item.id,
+    titulo: item.titulo,
+    categoria: item.categoria,
+    estado: item.estado,
+    concluida: item.concluida,
+    responsavelNome: item.responsavelNome,
+    dataConclusao: item.dataConclusao,
+    created_at: item.created_at,
+    tags: item.tags,
+    tagIds: item.tagIds
+  }));
 }
 
 // atualiza uma tarefa pelo id
@@ -18,7 +31,22 @@ export async function updateTask(id: number, task: Task): Promise<Task> {
     body: JSON.stringify(task)
   });
   if (!res.ok) throw new Error('Erro ao atualizar task');
-  return res.json() as Promise<Task>;
+
+  const data = (await res.json()) as Task;
+  const newTask: Task = {
+    id: data.id,
+    titulo: data.titulo,
+    categoria: data.categoria,
+    estado: data.estado,
+    concluida: data.concluida,
+    responsavelNome: data.responsavelNome,
+    dataConclusao: data.dataConclusao,
+    created_at: data.created_at,
+    tags: data.tags,
+    tagIds: data.tagIds
+  };
+
+  return newTask;
 }
 
 // cria uma nova tarefa
@@ -29,7 +57,22 @@ export async function createTask(task: Task): Promise<Task> {
     body: JSON.stringify(task)
   });
   if (!res.ok) throw new Error('Erro ao criar task');
-  return res.json() as Promise<Task>;
+
+  const data = (await res.json()) as Task;
+  const newTask: Task = {
+    id: data.id,
+    titulo: data.titulo,
+    categoria: data.categoria,
+    estado: data.estado,
+    concluida: data.concluida,
+    responsavelNome: data.responsavelNome,
+    dataConclusao: data.dataConclusao,
+    created_at: data.created_at,
+    tags: data.tags,
+    tagIds: data.tagIds
+  };
+
+  return newTask;
 }
 
 // apaga uma tarefa pelo id
@@ -47,7 +90,16 @@ export async function deleteTask(id: number): Promise<void> {
 export async function getTaskStats(): Promise<TaskStats> {
   const res = await fetch(`${BASE_URL}/tasks/stats`);
   if (!res.ok) throw new Error('Erro ao buscar estatisticas de tasks');
-  return res.json() as Promise<TaskStats>;
+
+  const data = (await res.json()) as TaskStats;
+  const stats: TaskStats = {
+    total: data.total,
+    concluidas: data.concluidas,
+    pendentes: data.pendentes,
+    percentagem: data.percentagem
+  };
+
+  return stats;
 }
 
 // adiciona uma tag a uma tarefa

@@ -4,7 +4,17 @@ export async function getCommentsByTask(taskId) {
     const res = await fetch(`${BASE_URL}/tasks/${taskId}/comments`);
     if (!res.ok)
         throw new Error('Erro ao buscar comentarios da task');
-    return res.json();
+    const data = (await res.json());
+    return data.map((item) => {
+        const comment = {
+            id: item.id,
+            task_id: item.task_id,
+            user_id: item.user_id,
+            conteudo: item.conteudo,
+            dataCriacao: item.dataCriacao
+        };
+        return comment;
+    });
 }
 // cria um comentário numa tarefa
 export async function createComment(taskId, userId, conteudo) {
@@ -15,7 +25,15 @@ export async function createComment(taskId, userId, conteudo) {
     });
     if (!res.ok)
         throw new Error('Erro ao criar comentario');
-    return res.json();
+    const data = (await res.json());
+    const newComment = {
+        id: data.id,
+        task_id: data.task_id,
+        user_id: data.user_id,
+        conteudo: data.conteudo,
+        dataCriacao: data.dataCriacao
+    };
+    return newComment;
 }
 // atualiza um comentário de uma tarefa
 export async function updateComment(taskId, commentId, conteudo) {
@@ -26,7 +44,15 @@ export async function updateComment(taskId, commentId, conteudo) {
     });
     if (!res.ok)
         throw new Error('Erro ao atualizar comentario');
-    return res.json();
+    const data = (await res.json());
+    const newComment = {
+        id: data.id,
+        task_id: data.task_id,
+        user_id: data.user_id,
+        conteudo: data.conteudo,
+        dataCriacao: data.dataCriacao
+    };
+    return newComment;
 }
 // apaga um comentário de uma tarefa
 export async function deleteComment(taskId, commentId) {
