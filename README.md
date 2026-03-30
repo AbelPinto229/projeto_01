@@ -1,71 +1,125 @@
-# Projeto ClickUP API
+# Projeto Task Manager (Backend + Frontend)
 
-**Autor:** Abel Pinto
+Autor: Abel Pinto
 
-**Repositório GitHub:** [https://github.com/AbelPinto229/projeto_01.git](https://github.com/AbelPinto229/projeto_01.git)
+Repositorio GitHub: https://github.com/AbelPinto229/projeto_01.git
 
-## Passos para executar o código
+## Visao Geral
 
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/AbelPinto229/projeto_01.git
-   cd seu-repositorio
-   ```
-2. **Instale as dependências:**
-   ```bash
-   npm install
-   ```
-3. **Configure o banco de dados:**
-   - Crie um banco MySQL e importe o arquivo `database.sql`.
-   - Configure as variáveis de ambiente no arquivo `.env` (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT).
-4. **Inicie o servidor:**
-   ```bash
-   npm start
-   ```
-5. **Acesse a API:**
-   - O servidor estará disponível em `http://localhost:3000` (ou porta definida no `.env`).
+Este repositorio contem:
 
-## Principais decisões tomadas e justificação
+- Um backend em Node.js + Express + MySQL (pasta `src/`)
+- Um frontend em TypeScript + Vite (pasta `frontend/`)
 
-- **Estrutura em camadas (controllers, services, routes):**
-  - Separação clara de responsabilidades facilita manutenção, testes e escalabilidade.
-- **Uso de async/await:**
-  - Permite código assíncrono mais limpo e fácil de entender.
-- **Validação e tratamento de erros:**
-  - Controllers retornam status HTTP adequados e mensagens claras para o cliente.
-- **SQL parametrizado:**
-  - Previne SQL Injection e aumenta a segurança.
-- **Remoção de comentários e código limpo:**
-  - Facilita leitura e entendimento do código por outros desenvolvedores.
+O frontend consome a API em `http://localhost:3000`.
 
-Essas decisões garantem um projeto robusto, seguro e de fácil evolução.
+## Requisitos
 
-## Endpoints disponíveis
+- Node.js 18+
+- MySQL 8+
 
-### Usuários (`/users`)
-- `GET /users` — Lista todos os usuários (parâmetros: `search`, `sort`)
-- `GET /users/stats` — Estatísticas de usuários
-- `POST /users` — Cria um novo usuário
-- `GET /users/:id/tasks` — Lista tarefas atribuídas ao usuário
-- `PUT /users/:id` — Atualiza usuário (requer middleware)
-- `PATCH /users/:id` — Alterna status ativo/inativo (requer middleware)
-- `DELETE /users/:id` — Remove usuário (requer middleware)
-- `GET /users/:id` — Busca usuário por ID (requer middleware)
+## Configuracao do Backend
 
-### Tarefas (`/tasks`)
-- `GET /tasks` — Lista todas as tarefas (parâmetros: `search`, `sort`)
-- `GET /tasks/stats` — Estatísticas de tarefas
-- `POST /tasks` — Cria uma nova tarefa
-- `PUT /tasks/:id` — Atualiza tarefa
-- `DELETE /tasks/:id` — Remove tarefa
-- `POST /tasks/:id/tags` — Adiciona tag à tarefa
-- `GET /tasks/:id/comments` — Lista comentários da tarefa
-- `POST /tasks/:id/comments` — Cria comentário na tarefa
-- `PUT /tasks/:id/comments/:commentId` — Atualiza comentário
-- `DELETE /tasks/:id/comments/:commentId` — Remove comentário
+1. Clone o repositorio:
+
+```bash
+git clone https://github.com/AbelPinto229/projeto_01.git
+cd projeto_01
+```
+
+2. Instale dependencias do backend:
+
+```bash
+npm install
+```
+
+3. Crie a base de dados e importe o schema:
+
+- Use o ficheiro `database.sql`
+
+4. Crie o ficheiro `.env` na raiz com as variaveis:
+
+```env
+DB_HOST=localhost
+DB_USER=seu_utilizador
+DB_PASSWORD=sua_password
+DB_NAME=seu_banco
+DB_PORT=3306
+PORT=3000
+```
+
+5. Inicie o backend:
+
+```bash
+npm start
+```
+
+Backend disponivel em: `http://localhost:3000`
+
+## Configuracao do Frontend
+
+1. Entre na pasta do frontend:
+
+```bash
+cd frontend
+```
+
+2. Instale dependencias:
+
+```bash
+npm install
+```
+
+3. Inicie em modo desenvolvimento:
+
+```bash
+npm run dev
+```
+
+Frontend disponivel em: `http://localhost:5173`
+
+## Scripts
+
+### Backend (raiz)
+
+- `npm start`: inicia a API
+
+### Frontend (`frontend/`)
+
+- `npm run dev`: inicia Vite
+- `npm run build`: compila TypeScript e gera build
+- `npm run preview`: serve o build gerado
+
+## Endpoints da API
+
+### Users (`/users`)
+
+- `GET /users`
+- `GET /users/stats`
+- `POST /users`
+- `GET /users/:id/tasks`
+- `PUT /users/:id`
+- `PATCH /users/:id`
+- `DELETE /users/:id`
+- `GET /users/:id`
+
+### Tasks (`/tasks`)
+
+- `GET /tasks`
+- `GET /tasks/stats`
+- `POST /tasks`
+- `PUT /tasks/:id`
+- `DELETE /tasks/:id`
+- `POST /tasks/:id/tags`
+- `DELETE /tasks/:id/tags/:tagId`
+- `GET /tasks/:id/comments`
+- `POST /tasks/:id/comments`
+- `PUT /tasks/:id/comments/:commentId`
+- `DELETE /tasks/:id/comments/:commentId`
 
 ### Tags (`/tags`)
-- `GET /tags` — Lista todas as tags
-- `POST /tags` — Cria uma nova tag
-- `GET /tags/:id/tasks` — Lista tarefas com a tag
-- `DELETE /tags/:id` — Remove tag
+
+- `GET /tags`
+- `POST /tags`
+- `GET /tags/:id/tasks`
+- `DELETE /tags/:id`
