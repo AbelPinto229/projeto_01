@@ -49,16 +49,7 @@ export async function updateUser(id: number, user: User): Promise<User> {
   });
   if (!res.ok) throw new Error('Erro ao atualizar user');
 
-  const data = (await res.json()) as User;
-  const newUser: User = {
-    id: data.id,
-    name: data.name,
-    email: data.email,
-    active: data.active,
-    created_at: data.created_at
-  };
-
-  return newUser;
+  return (await res.json()) as User;
 }
 
 // alterna o estado do utilizador

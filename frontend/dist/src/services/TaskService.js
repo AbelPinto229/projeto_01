@@ -1,5 +1,5 @@
 import { getTasks as apiGetTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, addTagToTask as apiAddTagToTask, removeTagFromTask as apiRemoveTagFromTask } from '../api/apiTaskService.js';
-export class TaskService {
+class TaskService {
     constructor() {
         this.tasks = [];
     }
@@ -34,9 +34,8 @@ export class TaskService {
     }
     // cria uma nova tarefa
     async createTask(task) {
-        const created = await apiCreateTask(task);
+        await apiCreateTask(task);
         await this.getTasks();
-        return created;
     }
     // devolve uma tarefa específica
     getTask(id) {
@@ -47,9 +46,8 @@ export class TaskService {
     }
     // atualiza uma tarefa
     async updateTask(task) {
-        const updated = await apiUpdateTask(task.id, task);
+        await apiUpdateTask(task.id, task);
         await this.getTasks();
-        return updated;
     }
     // apaga uma tarefa
     async deleteTask(id) {
@@ -65,4 +63,5 @@ export class TaskService {
         await this.getTasks();
     }
 }
+export { TaskService };
 //# sourceMappingURL=TaskService.js.map
