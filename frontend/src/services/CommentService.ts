@@ -16,20 +16,23 @@ export class CommentService {
   }
 
   // cria um comentário e atualiza a lista em memória
-  async createComment(taskId: number, userId: number, conteudo: string): Promise<void> {
+  async createComment(taskId: number, userId: number, conteudo: string) {
     await apiCreateComment(taskId, userId, conteudo);
+
     await this.getCommentsByTask(taskId);
   }
 
   // atualiza um comentário e volta a carregar a lista
-  async updateComment(taskId: number, commentId: number, conteudo: string): Promise<void> {
+  async updateComment(taskId: number, commentId: number, conteudo: string) {
     await apiUpdateComment(taskId, commentId, conteudo);
+
     await this.getCommentsByTask(taskId);
   }
 
   // apaga um comentário e volta a carregar a lista
-  async deleteComment(taskId: number, commentId: number): Promise<void> {
+  async deleteComment(taskId: number, commentId: number) {
     await apiDeleteComment(taskId, commentId);
+
     await this.getCommentsByTask(taskId);
   }
 }

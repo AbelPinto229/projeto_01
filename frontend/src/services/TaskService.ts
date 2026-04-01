@@ -1,7 +1,7 @@
 import type { Task, TaskStats } from '../models/Task.js';
 import { getTasks as apiGetTasks, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, addTagToTask as apiAddTagToTask, removeTagFromTask as apiRemoveTagFromTask } from '../api/apiTaskService.js';
 
-export class TaskService {
+class TaskService {
   private tasks: Task[] = [];
 
   // devolve todas as tarefas com filtros opcionais
@@ -41,10 +41,10 @@ export class TaskService {
   }
 
   // cria uma nova tarefa
-  async createTask(task: Task): Promise<Task> {
-    const created = await apiCreateTask(task);
+  async createTask(task: Task) {
+    await apiCreateTask(task);
+
     await this.getTasks();
-    return created;
   }
 
   // devolve uma tarefa específica
@@ -55,25 +55,30 @@ export class TaskService {
   }
 
   // atualiza uma tarefa
-  async updateTask(task: Task): Promise<Task> {
-    const updated = await apiUpdateTask(task.id, task);
+  async updateTask(task: Task) {
+    await apiUpdateTask(task.id, task);
+
     await this.getTasks();
-    return updated;
   }
 
   // apaga uma tarefa
-  async deleteTask(id: number): Promise<void> {
+  async deleteTask(id: number) {
     await apiDeleteTask(id);
+
     await this.getTasks();
   }
 
-  async addTagToTask(taskId: number, tagId: number): Promise<void> {
+  async addTagToTask(taskId: number, tagId: number) {
     await apiAddTagToTask(taskId, tagId);
+
     await this.getTasks();
   }
 
-  async removeTagFromTask(taskId: number, tagId: number): Promise<void> {
+  async removeTagFromTask(taskId: number, tagId: number) {
     await apiRemoveTagFromTask(taskId, tagId);
+
     await this.getTasks();
   }
 }
+
+export { TaskService };

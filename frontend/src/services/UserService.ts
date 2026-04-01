@@ -41,8 +41,9 @@ export class UserService {
   }
 
   // cria um novo utilizador
-  async createUser(user: User): Promise<void> {
+  async createUser(user: User) {
     await apiCreateUser(user);
+
     await this.getUsers();
   }
 
@@ -54,20 +55,23 @@ export class UserService {
   }
 
   // atualiza um utilizador
-  async updateUser(user: User): Promise<void> {
+  async updateUser(user: User) {
     await apiUpdateUser(user.id, user);
+
     await this.getUsers();
   }
 
   // alterna o estado ativo do utilizador
-  async toggleUserStatus(id: number): Promise<void> {
+  async toggleUserStatus(id: number) {
     await apiToggleUserStatus(id);
+
     await this.getUsers();
   }
 
   // apaga um utilizador
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: number) {
     await apiDeleteUser(id);
+
     await this.getUsers();
   }
 }

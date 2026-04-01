@@ -11,14 +11,16 @@ export class TagService {
   }
 
   // cria uma nova tag
-  async createTag(tag: Tag): Promise<void> {
+  async createTag(tag: Tag) {
     await apiCreateTag(tag);
+
     await this.getTags();
   }
 
   // apaga uma tag
-  async deleteTag(id: number): Promise<void> {
+  async deleteTag(id: number) {
     await apiDeleteTag(id);
+
     await this.getTags();
   }
 }
